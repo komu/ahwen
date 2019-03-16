@@ -1,0 +1,2 @@
+# ksql
+Simple SQL database
