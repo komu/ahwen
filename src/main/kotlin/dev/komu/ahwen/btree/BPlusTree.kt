@@ -14,16 +14,12 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
 
         if (root.isOverflow) {
             val (splitKey, sibling) = root.split()
-            root = Internal(
-                keys = listOf(splitKey),
-                children = listOf(root, sibling)
-            )
+            root = Internal(listOf(splitKey), listOf(root, sibling))
         }
     }
 
-    fun remove(key: K) {
+    fun remove(key: K): V? =
         root.remove(key)
-    }
 
     fun dump() {
         val nodesWithLevel = mutableListOf<Pair<Int, Node>>()
@@ -38,11 +34,8 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
         }
     }
 
-    fun countEntries(): Int {
-        val nodesWithLevel = mutableListOf<Pair<Int, Node>>()
-        root.collectNodes(0, nodesWithLevel)
-        return nodesWithLevel.map { it.second }.filterIsInstance<Leaf>().sumBy { it.keys.size }
-    }
+    val size: Int
+        get() = entries().count()
 
     fun checkInvariants() {
         root.checkInvariants(0)
@@ -51,13 +44,13 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
     operator fun get(key: K): V? =
         root.findLeaf(key)[key]
 
-    fun entries(): Iterator<Pair<K, V>> = iterator {
+    fun entries(): Sequence<Pair<K, V>> = leafs().flatMap { it.entries }
+
+    private fun leafs() = sequence<Leaf> {
         var node: Leaf? = root.firstLeaf
 
         while (node != null) {
-            for ((i, key) in node.keys.withIndex())
-                yield(key to node.values[i])
-
+            yield(node)
             node = node.next
         }
     }
@@ -82,21 +75,16 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
         abstract fun insert(key: K, value: V)
         abstract fun checkInvariants(level : Int)
 
-        protected fun findChildIndex(key: K): Int {
-            val loc = keys.binarySearch(key)
-            return if (loc >= 0) loc + 1 else -loc - 1
-        }
-
         abstract fun collectNodes(level: Int, result: MutableList<Pair<Int, Node>>)
         abstract fun split(): Pair<K, Node>
-        abstract fun remove(key: K)
+        abstract fun remove(key: K): V?
     }
 
     private inner class Internal(keys: List<K>, children: List<Node>): Node() {
         private val children = mutableListOf<Node>()
 
         init {
-            check(keys.size + 1 == children.size)
+            require(keys.size + 1 == children.size)
             this.keys += keys
             this.children += children
         }
@@ -169,15 +157,15 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
             }
         }
 
-        override fun remove(key: K) {
+        override fun remove(key: K): V? {
             val childIndex = findChildIndex(key)
             val child = children[childIndex]
-            child.remove(key)
+            val value = child.remove(key)
 
             if (child.isUnderflow)
                 rebalance(childIndex)
 
-//            checkInvariants(if (this == root) 0 else 1)
+            return value
         }
 
         private fun rebalance(childIndex: Int) {
@@ -272,6 +260,11 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
         private fun findChild(key: K) =
             children[findChildIndex(key)]
 
+        private fun findChildIndex(key: K): Int {
+            val index = keys.binarySearch(key)
+            return if (index >= 0) index + 1 else -index - 1
+        }
+
         override fun collectNodes(level: Int, result: MutableList<Pair<Int, Node>>) {
             result += level to this
 
@@ -296,10 +289,12 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
     }
 
     private inner class Leaf(keys: List<K>, values: List<V>): Node() {
-        val values = mutableListOf<V>()
+        private val values = mutableListOf<V>()
         var next: Leaf? = null
+            private set
 
         init {
+            require(keys.size == values.size)
             this.keys += keys
             this.values += values
         }
@@ -313,12 +308,18 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
         override val firstLeaf: Leaf
             get() = this
 
+        val entries: Sequence<Pair<K, V>>
+            get() = sequence {
+                for ((i, key) in keys.withIndex())
+                    yield(key to values[i])
+            }
+
         override fun findLeaf(key: K) = this
 
         override fun checkInvariants(level: Int) {
             check(level == 0 || !isUnderflow) { "underflow at $level: $keys"}
             check(!isOverflow) { "overflow at $level: $keys "}
-            check(values.size == keys.size)
+            check(values.size == keys.size) { "values.size != keys.size (${values.size} != ${keys.size})"}
             check(keys.isStrictlyAscending()) { "invalid keys: $keys" }
         }
 
@@ -347,12 +348,13 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
             }
         }
 
-        override fun remove(key: K) {
+        override fun remove(key: K): V? {
             val loc = keys.binarySearch(key)
-            if (loc >= 0) {
-                keys.removeAt(loc)
-                values.removeAt(loc)
-            }
+            if (loc < 0)
+                return null
+
+            keys.removeAt(loc)
+            return values.removeAt(loc)
         }
 
         override fun collectNodes(level: Int, result: MutableList<Pair<Int, Node>>) {

@@ -105,7 +105,7 @@ internal class BPlusTreeTest {
         for (i in remaining)
             assertEquals("v$i", tree[i], "value for $i")
 
-        assertEquals(remaining.size, tree.countEntries())
-        assertEquals(remaining.map { it to "v$it" }, tree.entries().asSequence().toList())
+        assertEquals(remaining.size, tree.size)
+        assertEquals(remaining.map { it to "v$it" }, tree.entries().toList())
     }
 }
