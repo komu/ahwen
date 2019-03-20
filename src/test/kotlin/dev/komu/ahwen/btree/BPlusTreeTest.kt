@@ -12,8 +12,10 @@ internal class BPlusTreeTest {
         val tree = BPlusTree<Int, String>(4)
         val random = Random(0)
 
-        for (i in (0..99).toList().shuffled(random))
+        for (i in (0..99).toList().shuffled(random)) {
             tree.insert(i, "v$i")
+            tree.checkInvariants()
+        }
 
         for (i in 0..99)
             assertEquals("v$i", tree[i], "get k$i")
@@ -24,11 +26,15 @@ internal class BPlusTreeTest {
         val tree = BPlusTree<Int, String>(4)
         val random = Random(0)
 
-        for (i in (0..99).toList().shuffled(random))
+        for (i in (0..99).toList().shuffled(random)) {
             tree.insert(i, "v$i")
+            tree.checkInvariants()
+        }
 
-        for (i in (0..49).toList().shuffled(random))
+        for (i in (0..49).toList().shuffled(random)) {
             tree.remove(i)
+            tree.checkInvariants()
+        }
 
         for (i in 0..49)
             assertNull(tree[i])
@@ -43,11 +49,15 @@ internal class BPlusTreeTest {
 
         val random = Random(0)
 
-        for (i in (0..99).toList().shuffled(random))
+        for (i in (0..99).toList().shuffled(random)) {
             tree.insert(i, "v$i")
+            tree.checkInvariants()
+        }
 
-        for (i in (0..99).toList().shuffled(random))
+        for (i in (0..99).toList().shuffled(random)) {
             tree.remove(i)
+            tree.checkInvariants()
+        }
     }
 
     @Test
@@ -59,8 +69,10 @@ internal class BPlusTreeTest {
             val num = random.nextInt(50)
             if (tree[num] == null) {
                 tree.insert(num, 1)
+                tree.checkInvariants()
             } else {
                 tree.remove(num)
+                tree.checkInvariants()
             }
         }
     }
@@ -70,14 +82,18 @@ internal class BPlusTreeTest {
         val random = Random(2)
         val tree = BPlusTree<Int, String>(8)
 
-        val size = 1000
+        val size = 2000
         val allValues = (0..size).toList()
-        for (i in allValues.shuffled(random))
+        for (i in allValues.shuffled(random)) {
             tree.insert(i, "v$i")
+            tree.checkInvariants()
+        }
 
         val removed = allValues.shuffled(random).take(size / 2)
-        for (i in removed)
+        for (i in removed) {
             tree.remove(i)
+            tree.checkInvariants()
+        }
 
         for (i in removed)
             assertNull(tree[i], "value for $i")

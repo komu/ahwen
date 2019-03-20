@@ -1,5 +1,10 @@
 package dev.komu.ahwen.btree
 
+import dev.komu.ahwen.utils.isStrictlyAscending
+
+/**
+ * An implementation of B+ tree.
+ */
 class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparable<K> {
 
     private var root: Node = Leaf(emptyList(), emptyList())
@@ -14,13 +19,10 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
                 children = listOf(root, sibling)
             )
         }
-
-        checkInvariants()
     }
 
     fun remove(key: K) {
         root.remove(key)
-        checkInvariants()
     }
 
     fun dump() {
@@ -39,16 +41,11 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
     fun countEntries(): Int {
         val nodesWithLevel = mutableListOf<Pair<Int, Node>>()
         root.collectNodes(0, nodesWithLevel)
-        return nodesWithLevel.map { it.second }.filterIsInstance<Leaf>().sumBy { it.values.size }
+        return nodesWithLevel.map { it.second }.filterIsInstance<Leaf>().sumBy { it.keys.size }
     }
 
     fun checkInvariants() {
         root.checkInvariants(0)
-    }
-
-    private fun checkKeys(keys: List<K>) {
-        check(keys == keys.sorted())
-        check(keys.size == keys.toSet().size) { "non-distinct keys $keys" }
     }
 
     operator fun get(key: K): V? =
@@ -65,7 +62,7 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
         }
     }
 
-    abstract inner class Node {
+    private abstract inner class Node {
 
         val keys = mutableListOf<K>()
 
@@ -95,8 +92,8 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
         abstract fun remove(key: K)
     }
 
-    inner class Internal(keys: List<K>, children: List<Node>): Node() {
-        val children = mutableListOf<Node>()
+    private inner class Internal(keys: List<K>, children: List<Node>): Node() {
+        private val children = mutableListOf<Node>()
 
         init {
             check(keys.size + 1 == children.size)
@@ -111,11 +108,10 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
             check(level == 0 || !isUnderflow) { "underflow (children=${children.size})"}
             check(!isOverflow) { "overflow (children=${children.size})"}
             check(children.size == keys.size + 1)
-            checkKeys(keys)
+            check(keys.isStrictlyAscending()) { "invalid keys: $keys" }
 
-            for (child in children) {
+            for (child in children)
                 child.checkInvariants(level + 1)
-            }
 
             checkChildKeys()
         }
@@ -299,7 +295,7 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
         }
     }
 
-    inner class Leaf(keys: List<K>, values: List<V>): Node() {
+    private inner class Leaf(keys: List<K>, values: List<V>): Node() {
         val values = mutableListOf<V>()
         var next: Leaf? = null
 
@@ -323,7 +319,7 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
             check(level == 0 || !isUnderflow) { "underflow at $level: $keys"}
             check(!isOverflow) { "overflow at $level: $keys "}
             check(values.size == keys.size)
-            checkKeys(keys)
+            check(keys.isStrictlyAscending()) { "invalid keys: $keys" }
         }
 
         operator fun get(key: K): V? {
@@ -334,7 +330,7 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
             return values[index]
         }
 
-        internal fun merge(right: Leaf) {
+        fun merge(right: Leaf) {
             keys += right.keys
             values += right.values
             next = right.next
@@ -363,7 +359,7 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
             result += level to this
         }
 
-        internal fun moveFrom(from: Leaf, count: Int, reversed: Boolean) {
+        fun moveFrom(from: Leaf, count: Int, reversed: Boolean) {
             if (!reversed) {
                 val movedKeys = from.keys.subList(0, count)
                 val movedValues = from.values.subList(0, count)
