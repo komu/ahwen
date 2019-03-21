@@ -1,8 +1,8 @@
 package dev.komu.ahwen.btree
 
+import dev.komu.ahwen.btree.Node.Internal
+import dev.komu.ahwen.btree.Node.Leaf
 import dev.komu.ahwen.utils.isStrictlyAscending
-import dev.komu.ahwen.btree.BPlusTree.Node.Leaf
-import dev.komu.ahwen.btree.BPlusTree.Node.Internal
 
 /**
  * An implementation of B+ tree.
@@ -147,6 +147,41 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
             root = left
     }
 
+    private fun Node<K, V>.split(): Pair<K, Node<K, V>> {
+        when (this) {
+            is Internal -> {
+                val from = keys.size / 2 + 1
+                val to = keys.size
+                val movedChildren = children.subList(from, to + 1)
+                val sibling = Internal(
+                    keys = keys.subList(from, to),
+                    children = movedChildren
+                )
+                val splitKey = keys[from - 1]
+                keys.subList(from - 1, to).clear()
+                movedChildren.clear()
+
+                return splitKey to sibling
+            }
+            is Leaf -> {
+                val from = (keys.size + 1) / 2
+                val to = keys.size
+
+                val movedKeys = keys.subList(from, to)
+                val movedValues = values.subList(from, to)
+                val splitKey = movedKeys.first()
+                val sibling = Leaf(movedKeys, movedValues)
+
+                movedKeys.clear()
+                movedValues.clear()
+
+                sibling.next = next
+                next = sibling
+                return splitKey to sibling
+            }
+        }
+    }
+
     private fun Node<K, V>.checkInvariants(level: Int) {
         check(level == 0 || !isUnderflow) { "underflow $this" }
         check(!isOverflow) { "overflow at $level: $keys " }
@@ -164,6 +199,19 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
             is Leaf -> {
                 check(values.size == keys.size) { "values.size != keys.size (${values.size} != ${keys.size})" }
             }
+        }
+    }
+
+    private fun Internal<K, V>.checkChildKeys() {
+        for ((i, child) in children.withIndex()) {
+            val min = keys.getOrNull(i - 1)
+            val max = keys.getOrNull(i)
+
+            if (min != null)
+                check(child.keys.all { it >= min }) { "keys ${child.keys} not in range $min..$max | $keys" }
+
+            if (max != null)
+                check(child.keys.all { it < max }) { "keys ${child.keys} not in range $min..$max | $keys" }
         }
     }
 
@@ -191,221 +239,73 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
         }
     }
 
-    private sealed class Node<K, V> where K : Comparable<K> {
-
-        val keys = mutableListOf<K>()
-
-        abstract val firstLeaf: Leaf<K, V>
-
-        /**
-         * Finds the leaf node for given key. The key might not be present in the node,
-         * but if any node contains the value, it will be this.
-         */
-        abstract fun findLeaf(key: K): Leaf<K, V>
-
-        abstract fun split(): Pair<K, Node<K, V>>
-
-        class Internal<K, V>(keys: List<K>, children: List<Node<K, V>>) : Node<K, V>() where K : Comparable<K> {
-            val children = mutableListOf<Node<K, V>>()
-
-            init {
-                require(keys.size + 1 == children.size)
-                this.keys += keys
-                this.children += children
-            }
-
-            override val firstLeaf: Leaf<K, V>
-                get() = children[0].firstLeaf
-
-            fun checkChildKeys() {
-                for ((i, child) in children.withIndex()) {
-                    val min = keys.getOrNull(i - 1)
-                    val max = keys.getOrNull(i)
-
-                    if (min != null)
-                        check(child.keys.all { it >= min }) { "keys ${child.keys} not in range $min..$max | $keys" }
-
-                    if (max != null)
-                        check(child.keys.all { it < max }) { "keys ${child.keys} not in range $min..$max | $keys" }
-                }
-            }
-
-            fun merge(right: Internal<K, V>, key: K) {
-                keys += key
-                keys += right.keys
-                children += right.children
-            }
-
-            override fun toString(): String = "internal $keys"
-
-            override fun findLeaf(key: K) =
-                findChild(key).findLeaf(key)
-
-            fun insertChild(key: K, child: Node<K, V>) {
-                val loc = keys.binarySearch(key)
-                if (loc >= 0) {
-                    // children[loc + 1] = child
-                    error("trying to insert duplicate child")
-                } else {
-                    val index = -loc - 1
-                    keys.add(index, key)
-                    children.add(index + 1, child)
-                }
-            }
-
-            fun redistribute(source: Int, target: Int) {
-                val fromNode = children[source]
-                val toNode = children[target]
-
-                val count = (fromNode.keys.size - toNode.keys.size) / 2
-                assert(count > 0)
-
-                val reversed = source < target
-                val keyIndex = minOf(source, target)
-
-                when (toNode) {
-                    is Internal ->
-                        keys[keyIndex] =
-                            toNode.moveFrom(fromNode as Internal, count, keys[keyIndex], reversed = reversed)
-                    is Leaf -> {
-                        toNode.moveFrom(fromNode as Leaf, count, reversed = reversed)
-                        keys[keyIndex] = children[keyIndex + 1].keys.first()
-                    }
-                }
-            }
-
-            private fun moveFrom(from: Internal<K, V>, count: Int, key: K, reversed: Boolean): K {
-                if (!reversed) {
-                    val takenKeys = from.keys.subList(0, count)
-                    val resultKey = takenKeys.last()
-
-                    keys.addAll(listOf(key) + takenKeys.subList(0, takenKeys.size - 1))
-
-                    takenKeys.clear()
-
-                    val takenChildren = from.children.subList(0, count)
-                    children.addAll(takenChildren)
-                    takenChildren.clear()
-
-                    return resultKey
-
-                } else {
-                    val takenKeys = from.keys.subList(from.keys.size - count, from.keys.size)
-                    val resultKey = takenKeys.first()
-
-                    keys.addAll(0, takenKeys.subList(1, takenKeys.size) + key)
-
-                    takenKeys.clear()
-
-                    val takenChildren = from.children.subList(from.children.size - count, from.children.size)
-                    children.addAll(0, takenChildren)
-                    takenChildren.clear()
-
-                    return resultKey
-                }
-            }
-
-            fun findChild(key: K) =
-                children[findChildIndex(key)]
-
-            fun findChildIndex(key: K): Int {
-                val index = keys.binarySearch(key)
-                return if (index >= 0) index + 1 else -index - 1
-            }
-
-            override fun split(): Pair<K, Node<K, V>> {
-                val from = keys.size / 2 + 1
-                val to = keys.size
-                val movedChildren = children.subList(from, to + 1)
-                val sibling = Internal(
-                    keys = keys.subList(from, to),
-                    children = movedChildren
-                )
-                val splitKey = keys[from - 1]
-                keys.subList(from - 1, to).clear()
-                movedChildren.clear()
-
-                return splitKey to sibling
-            }
+    private val Node<K, V>.firstLeaf: Leaf<K, V>
+        get() = when (this) {
+            is Internal -> children.first().firstLeaf
+            is Leaf -> this
         }
 
-        class Leaf<K, V>(keys: List<K>, values: List<V>) : Node<K, V>() where K : Comparable<K> {
-            val values = mutableListOf<V>()
-            var next: Leaf<K, V>? = null
-                private set
 
-            init {
-                require(keys.size == values.size)
-                this.keys += keys
-                this.values += values
+    /**
+     * Finds the leaf node for given key. The key might not be present in the node,
+     * but if any node contains the value, it will be this.
+     */
+    private fun Node<K, V>.findLeaf(key: K): Leaf<K, V> = when (this) {
+        is Internal -> findChild(key).findLeaf(key)
+        is Leaf -> this
+    }
+
+    private fun Internal<K, V>.findChild(key: K) =
+        children[findChildIndex(key)]
+
+    private fun Internal<K, V>.redistribute(source: Int, target: Int) {
+        val fromNode = children[source]
+        val toNode = children[target]
+
+        val count = (fromNode.keys.size - toNode.keys.size) / 2
+        assert(count > 0)
+
+        val reversed = source < target
+        val keyIndex = minOf(source, target)
+
+        when (toNode) {
+            is Internal ->
+                keys[keyIndex] = toNode.moveFrom(fromNode as Internal, count, keys[keyIndex], reversed = reversed)
+            is Leaf -> {
+                toNode.moveFrom(fromNode as Leaf, count, reversed = reversed)
+                keys[keyIndex] = children[keyIndex + 1].keys.first()
             }
+        }
+    }
 
-            override val firstLeaf: Leaf<K, V>
-                get() = this
+    private fun Internal<K, V>.moveFrom(from: Internal<K, V>, count: Int, key: K, reversed: Boolean): K {
+        if (!reversed) {
+            val takenKeys = from.keys.subList(0, count)
+            val resultKey = takenKeys.last()
 
-            val entries: Sequence<Pair<K, V>>
-                get() = sequence {
-                    for ((i, key) in keys.withIndex())
-                        yield(key to values[i])
-                }
+            keys.addAll(listOf(key) + takenKeys.subList(0, takenKeys.size - 1))
 
-            override fun findLeaf(key: K) = this
+            takenKeys.clear()
 
-            operator fun get(key: K): V? {
-                val index = keys.binarySearch(key)
-                if (index < 0)
-                    return null
+            val takenChildren = from.children.subList(0, count)
+            children.addAll(takenChildren)
+            takenChildren.clear()
 
-                return values[index]
-            }
+            return resultKey
 
-            fun merge(right: Leaf<K, V>) {
-                keys += right.keys
-                values += right.values
-                next = right.next
-            }
+        } else {
+            val takenKeys = from.keys.subList(from.keys.size - count, from.keys.size)
+            val resultKey = takenKeys.first()
 
-            fun moveFrom(from: Leaf<K, V>, count: Int, reversed: Boolean) {
-                if (!reversed) {
-                    val movedKeys = from.keys.subList(0, count)
-                    val movedValues = from.values.subList(0, count)
+            keys.addAll(0, takenKeys.subList(1, takenKeys.size) + key)
 
-                    keys += movedKeys
-                    values += movedValues
+            takenKeys.clear()
 
-                    movedKeys.clear()
-                    movedValues.clear()
+            val takenChildren = from.children.subList(from.children.size - count, from.children.size)
+            children.addAll(0, takenChildren)
+            takenChildren.clear()
 
-                } else {
-                    val movedKeys = from.keys.subList(from.keys.size - count, from.keys.size)
-                    val movedValues = from.values.subList(from.keys.size - count, from.keys.size)
-
-                    keys.addAll(0, movedKeys)
-                    values.addAll(0, movedValues)
-
-                    movedKeys.clear()
-                    movedValues.clear()
-                }
-            }
-
-            override fun split(): Pair<K, Node<K, V>> {
-                val from = (keys.size + 1) / 2
-                val to = keys.size
-
-                val movedKeys = keys.subList(from, to)
-                val movedValues = values.subList(from, to)
-                val splitKey = movedKeys.first()
-                val sibling = Leaf(movedKeys, movedValues)
-
-                movedKeys.clear()
-                movedValues.clear()
-
-                sibling.next = next
-                next = sibling
-                return splitKey to sibling
-            }
-
-            override fun toString(): String = "leaf $keys"
+            return resultKey
         }
     }
 }
