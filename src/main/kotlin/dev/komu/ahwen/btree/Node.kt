@@ -3,28 +3,24 @@ package dev.komu.ahwen.btree
 /**
  * Represents a node in [BPlusTree].
  */
-sealed class Node<K, V> where K : Comparable<K> {
+sealed class Node<K, V>(val nodeId: NodeId) where K : Comparable<K> {
 
     val keys = mutableListOf<K>()
+    var dirty = true
 
-    class Internal<K, V>(keys: List<K>, children: List<Node<K, V>>) : Node<K, V>() where K : Comparable<K> {
-        val children = mutableListOf<Node<K, V>>()
-
-        init {
-            require(keys.size + 1 == children.size)
-            this.keys += keys
-            this.children += children
-        }
+    class Internal<K, V>(nodeId: NodeId) : Node<K, V>(nodeId) where K : Comparable<K> {
+        val children = mutableListOf<NodeId>()
 
         fun merge(right: Internal<K, V>, key: K) {
             keys += key
             keys += right.keys
             children += right.children
+            dirty = true
         }
 
         override fun toString(): String = "internal $keys"
 
-        fun insertChild(key: K, child: Node<K, V>) {
+        fun insertChild(key: K, child: NodeId) {
             val loc = keys.binarySearch(key)
             if (loc >= 0) {
                 // children[loc + 1] = child
@@ -33,6 +29,7 @@ sealed class Node<K, V> where K : Comparable<K> {
                 val index = -loc - 1
                 keys.add(index, key)
                 children.add(index + 1, child)
+                dirty = true
             }
         }
 
@@ -42,15 +39,9 @@ sealed class Node<K, V> where K : Comparable<K> {
         }
     }
 
-    class Leaf<K, V>(keys: List<K>, values: List<V>) : Node<K, V>() where K : Comparable<K> {
+    class Leaf<K, V>(nodeId: NodeId) : Node<K, V>(nodeId) where K : Comparable<K> {
         val values = mutableListOf<V>()
         var next: Leaf<K, V>? = null
-
-        init {
-            require(keys.size == values.size)
-            this.keys += keys
-            this.values += values
-        }
 
         val entries: Sequence<Pair<K, V>>
             get() = sequence {

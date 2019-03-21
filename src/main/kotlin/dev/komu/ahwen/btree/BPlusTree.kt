@@ -9,19 +9,23 @@ import dev.komu.ahwen.utils.isStrictlyAscending
  */
 class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparable<K> {
 
-    private var root: Node<K, V> = Leaf(emptyList(), emptyList())
+    private val pager = Pager<K, V>()
 
     fun insert(key: K, value: V) {
+        val root = pager.loadRoot()
         root.insert(key, value)
 
         if (root.isOverflow) {
             val (splitKey, sibling) = root.split()
-            root = Internal(listOf(splitKey), listOf(root, sibling))
+            val newRoot = pager.allocateInternal()
+            newRoot.keys += splitKey
+            newRoot.children += listOf(root.nodeId, sibling)
+            pager.rootId = newRoot.nodeId
         }
     }
 
     fun remove(key: K): V? =
-        root.remove(key)
+        pager.loadRoot().remove(key)
 
     fun dump() {
         for ((_, nodes) in nodesWithLevel().groupBy({ it.first }, { it.second })) {
@@ -41,10 +45,10 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
 
             if (this is Internal)
                 for (child in children)
-                    child.recurse(level + 1)
+                    pager.loadNode(child).recurse(level + 1)
         }
 
-        root.recurse(0)
+        pager.loadRoot().recurse(0)
         return result
     }
 
@@ -52,11 +56,11 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
         get() = entries().count()
 
     fun checkInvariants() {
-        root.checkInvariants(0)
+        pager.loadRoot().checkInvariants(0)
     }
 
     operator fun get(key: K): V? =
-        root.findLeaf(key)[key]
+        pager.loadRoot().findLeaf(key)[key]
 
     fun entries(): Sequence<Pair<K, V>> = leafs().flatMap { it.entries }
 
@@ -81,6 +85,7 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
                     keys.add(valueIndex, key)
                     values.add(valueIndex, value)
                 }
+                dirty = true
             }
         }
     }
@@ -89,7 +94,7 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
         when (this) {
             is Internal -> {
                 val childIndex = findChildIndex(key)
-                val child = children[childIndex]
+                val child = pager.loadNode(children[childIndex])
                 val value = child.remove(key)
 
                 if (child.isUnderflow)
@@ -102,6 +107,7 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
                 if (loc < 0)
                     return null
 
+                dirty = true
                 keys.removeAt(loc)
                 return values.removeAt(loc)
             }
@@ -110,8 +116,9 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
     }
 
     private fun Internal<K, V>.rebalance(childIndex: Int) {
-        val left = children.getOrNull(childIndex - 1)
-        val right = children.getOrNull(childIndex + 1)
+        // TODO: avoid loading right node if left is good enough
+        val left = children.getOrNull(childIndex - 1)?.let { pager.loadNode(it) }
+        val right = children.getOrNull(childIndex + 1)?.let { pager.loadNode(it) }
 
         when {
             left != null && left.canTake -> redistribute(source = childIndex - 1, target = childIndex)
@@ -124,8 +131,8 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
 
     private fun Internal<K, V>.merge(leftIndex: Int) {
         val rightIndex = leftIndex + 1
-        val left = children[leftIndex]
-        val right = children[rightIndex]
+        val left = pager.loadNode(children[leftIndex])
+        val right = pager.loadNode(children[rightIndex])
 
         check(left.keys.size + right.keys.size <= branchingFactor) { "merge $left+$right > $branchingFactor" }
 
@@ -143,25 +150,29 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
             insertChild(splitKey, sibling)
         }
 
-        if (this === root && keys.size == 0)
-            root = left
+        dirty = true
+        left.dirty = true
+        pager.freeNode(right.nodeId)
+
+        if (nodeId === pager.rootId && keys.size == 0)
+            pager.rootId = left.nodeId
     }
 
-    private fun Node<K, V>.split(): Pair<K, Node<K, V>> {
+    private fun Node<K, V>.split(): Pair<K, NodeId> {
         when (this) {
             is Internal -> {
                 val from = keys.size / 2 + 1
                 val to = keys.size
                 val movedChildren = children.subList(from, to + 1)
-                val sibling = Internal(
-                    keys = keys.subList(from, to),
-                    children = movedChildren
-                )
+                val sibling = pager.allocateInternal()
+                sibling.keys += keys.subList(from, to)
+                sibling.children += movedChildren
                 val splitKey = keys[from - 1]
                 keys.subList(from - 1, to).clear()
                 movedChildren.clear()
+                dirty = true
 
-                return splitKey to sibling
+                return splitKey to sibling.nodeId
             }
             is Leaf -> {
                 val from = (keys.size + 1) / 2
@@ -170,14 +181,18 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
                 val movedKeys = keys.subList(from, to)
                 val movedValues = values.subList(from, to)
                 val splitKey = movedKeys.first()
-                val sibling = Leaf(movedKeys, movedValues)
+                val sibling = pager.allocateLeaf()
+                sibling.keys += movedKeys
+                sibling.values += movedValues
 
                 movedKeys.clear()
                 movedValues.clear()
 
                 sibling.next = next
                 next = sibling
-                return splitKey to sibling
+                dirty = true
+
+                return splitKey to sibling.nodeId
             }
         }
     }
@@ -192,7 +207,7 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
                 check(children.size == keys.size + 1)
 
                 for (child in children)
-                    child.checkInvariants(level + 1)
+                    pager.loadNode(child).checkInvariants(level + 1)
 
                 checkChildKeys()
             }
@@ -203,7 +218,8 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
     }
 
     private fun Internal<K, V>.checkChildKeys() {
-        for ((i, child) in children.withIndex()) {
+        for ((i, childId) in children.withIndex()) {
+            val child = pager.loadNode(childId)
             val min = keys.getOrNull(i - 1)
             val max = keys.getOrNull(i)
 
@@ -231,7 +247,7 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
         }
 
     private fun leafs() = sequence<Leaf<K, V>> {
-        var node: Leaf<K, V>? = root.firstLeaf
+        var node: Leaf<K, V>? = pager.loadRoot().firstLeaf
 
         while (node != null) {
             yield(node)
@@ -241,10 +257,9 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
 
     private val Node<K, V>.firstLeaf: Leaf<K, V>
         get() = when (this) {
-            is Internal -> children.first().firstLeaf
+            is Internal -> pager.loadNode(children.first()).firstLeaf
             is Leaf -> this
         }
-
 
     /**
      * Finds the leaf node for given key. The key might not be present in the node,
@@ -256,11 +271,11 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
     }
 
     private fun Internal<K, V>.findChild(key: K) =
-        children[findChildIndex(key)]
+        pager.loadNode(children[findChildIndex(key)])
 
     private fun Internal<K, V>.redistribute(source: Int, target: Int) {
-        val fromNode = children[source]
-        val toNode = children[target]
+        val fromNode = pager.loadNode(children[source])
+        val toNode = pager.loadNode(children[target])
 
         val count = (fromNode.keys.size - toNode.keys.size) / 2
         assert(count > 0)
@@ -273,9 +288,12 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
                 keys[keyIndex] = toNode.moveFrom(fromNode as Internal, count, keys[keyIndex], reversed = reversed)
             is Leaf -> {
                 toNode.moveFrom(fromNode as Leaf, count, reversed = reversed)
-                keys[keyIndex] = children[keyIndex + 1].keys.first()
+                keys[keyIndex] = pager.loadNode(children[keyIndex + 1]).keys.first()
             }
         }
+
+        toNode.dirty = true
+        fromNode.dirty = true
     }
 
     private fun Internal<K, V>.moveFrom(from: Internal<K, V>, count: Int, key: K, reversed: Boolean): K {
