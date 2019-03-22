@@ -11,3 +11,9 @@ fun <T : Comparable<T>> Iterable<T>.isStrictlyAscending(): Boolean {
 
     return true
 }
+
+fun <T> MutableList<T>.subListToEnd(fromIndex: Int): MutableList<T> =
+    subList(fromIndex, size)
+
+fun <T> MutableList<T>.removeLast(): T =
+    removeAt(lastIndex)

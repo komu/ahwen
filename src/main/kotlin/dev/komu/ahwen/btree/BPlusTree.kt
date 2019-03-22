@@ -3,6 +3,7 @@ package dev.komu.ahwen.btree
 import dev.komu.ahwen.btree.Node.Internal
 import dev.komu.ahwen.btree.Node.Leaf
 import dev.komu.ahwen.utils.isStrictlyAscending
+import dev.komu.ahwen.utils.subListToEnd
 
 /**
  * An implementation of B+ tree.
@@ -162,13 +163,12 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
         when (this) {
             is Internal -> {
                 val from = keys.size / 2 + 1
-                val to = keys.size
-                val movedChildren = children.subList(from, to + 1)
+                val movedChildren = children.subListToEnd(from)
                 val sibling = pager.allocateInternal()
-                sibling.keys += keys.subList(from, to)
+                sibling.keys += keys.subListToEnd(from)
                 sibling.children += movedChildren
                 val splitKey = keys[from - 1]
-                keys.subList(from - 1, to).clear()
+                keys.subListToEnd(from - 1).clear()
                 movedChildren.clear()
                 dirty = true
 
@@ -176,10 +176,9 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
             }
             is Leaf -> {
                 val from = (keys.size + 1) / 2
-                val to = keys.size
 
-                val movedKeys = keys.subList(from, to)
-                val movedValues = values.subList(from, to)
+                val movedKeys = keys.subListToEnd(from)
+                val movedValues = values.subListToEnd(from)
                 val splitKey = movedKeys.first()
                 val sibling = pager.allocateLeaf()
                 sibling.keys += movedKeys
@@ -312,14 +311,14 @@ class BPlusTree<K, V>(private val branchingFactor: Int = 128) where K : Comparab
             return resultKey
 
         } else {
-            val takenKeys = from.keys.subList(from.keys.size - count, from.keys.size)
+            val takenKeys = from.keys.subListToEnd(from.keys.size - count)
             val resultKey = takenKeys.first()
 
             keys.addAll(0, takenKeys.subList(1, takenKeys.size) + key)
 
             takenKeys.clear()
 
-            val takenChildren = from.children.subList(from.children.size - count, from.children.size)
+            val takenChildren = from.children.subListToEnd(from.children.size - count)
             children.addAll(0, takenChildren)
             takenChildren.clear()
 

@@ -1,5 +1,7 @@
 package dev.komu.ahwen.btree
 
+import dev.komu.ahwen.utils.removeLast
+
 class Pager<K, V> where K : Comparable<K> {
 
     private val freeList = mutableListOf<NodeId>()
@@ -13,12 +15,14 @@ class Pager<K, V> where K : Comparable<K> {
         loadNode(rootId)
 
     fun freeNode(nodeId: NodeId) {
+        require(nodeId.id in pages.indices) { "tried to free invalid node: $nodeId"}
+
         freeList += nodeId
     }
 
     fun allocateInternal(): Node.Internal<K, V> =
         if (freeList.isNotEmpty()) {
-            val nodeId = freeList.removeAt(freeList.lastIndex)
+            val nodeId = freeList.removeLast()
             val node = Node.Internal<K, V>(nodeId)
             pages[nodeId.id] = node
             node
@@ -31,7 +35,7 @@ class Pager<K, V> where K : Comparable<K> {
 
     fun allocateLeaf(): Node.Leaf<K, V> =
         if (freeList.isNotEmpty()) {
-            val nodeId = freeList.removeAt(freeList.lastIndex)
+            val nodeId = freeList.removeLast()
             val node = Node.Leaf<K, V>(nodeId)
             pages[nodeId.id] = node
             node
