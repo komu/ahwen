@@ -42,7 +42,7 @@ internal class FileManagerImpl(private val dbDirectory: File) : FileManager {
     }
 
     @Synchronized
-    private fun size(fileName: String): Int {
+    override fun size(fileName: String): Int {
         val fc = getFile(fileName)
         return fc.size().toInt() / Page.BLOCK_SIZE
     }
