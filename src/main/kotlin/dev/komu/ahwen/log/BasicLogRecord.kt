@@ -5,13 +5,13 @@ import dev.komu.ahwen.file.Page.Companion.strSize
 
 class BasicLogRecord(private val page: Page, private var pos: Int) {
 
-    fun nextToInt(): Int {
+    fun nextInt(): Int {
         val result = page.getInt(pos)
         pos += Int.SIZE_BYTES
         return result
     }
 
-    fun nextToString(): String {
+    fun nextString(): String {
         val result = page.getString(pos)
         pos += strSize(result.length)
         return result
