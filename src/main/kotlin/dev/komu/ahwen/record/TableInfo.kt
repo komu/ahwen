@@ -3,7 +3,7 @@ package dev.komu.ahwen.record
 import java.sql.Types
 
 class TableInfo(
-    private val tableName: String,
+    val tableName: String,
     val schema: Schema,
     private val offsets: Map<String, Int>,
     val recordLength: Int) {
