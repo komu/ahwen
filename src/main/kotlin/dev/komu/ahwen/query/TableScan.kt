@@ -43,8 +43,8 @@ class TableScan(ti: TableInfo, tx: Transaction) : UpdateScan {
     override fun setVal(fieldName: String, value: Constant) {
         val type = schema.type(fieldName)
         return when (type) {
-            Types.INTEGER -> rf.setInt(fieldName, value.asJavaValue() as Int)
-            Types.VARCHAR -> rf.setString(fieldName, value.asJavaValue() as String)
+            Types.INTEGER -> rf.setInt(fieldName, value.value as Int)
+            Types.VARCHAR -> rf.setString(fieldName, value.value as String)
             else -> error("invalid type $type")
         }
     }

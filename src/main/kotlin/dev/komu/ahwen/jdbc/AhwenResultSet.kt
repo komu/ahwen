@@ -19,7 +19,7 @@ class AhwenResultSet(private val rows: MutableList<Map<String, Constant>>) : Res
 
     override fun getObject(columnLabel: String): Any {
         val value = rows[index][columnLabel] ?: error("unknown column $columnLabel")
-        return value.asJavaValue()
+        return value.value
     }
 
     override fun getInt(columnLabel: String): Int =

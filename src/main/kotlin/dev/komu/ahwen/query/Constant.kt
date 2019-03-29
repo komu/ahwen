@@ -1,12 +1,10 @@
 package dev.komu.ahwen.query
 
-interface Constant : Comparable<Constant> {
-
-    fun asJavaValue(): Any
+sealed class Constant : Comparable<Constant> {
+    abstract val value: Any
 }
 
-data class IntConstant(private val value: Int) : Constant {
-    override fun asJavaValue(): Any = value
+data class IntConstant(override val value: Int) : Constant() {
 
     override fun compareTo(other: Constant): Int =
         value.compareTo((other as IntConstant).value)
@@ -14,9 +12,7 @@ data class IntConstant(private val value: Int) : Constant {
     override fun toString(): String = value.toString()
 }
 
-data class StringConstant(private val value: String) : Constant {
-    override fun asJavaValue(): Any = value
-
+data class StringConstant(override val value: String) : Constant() {
     override fun compareTo(other: Constant): Int =
         value.compareTo((other as StringConstant).value)
 
