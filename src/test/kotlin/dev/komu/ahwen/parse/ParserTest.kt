@@ -7,7 +7,7 @@ internal class ParserTest {
 
     @Test
     fun `parsing select`() {
-        val parser = Parser(Lexer("select x from Foo where x = 42"))
+        val parser = Parser("select x from Foo where x = 42")
 
         assertEquals("select x from foo where x=42", parser.query().toString())
     }

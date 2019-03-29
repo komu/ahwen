@@ -3,9 +3,11 @@ package dev.komu.ahwen.parse
 import dev.komu.ahwen.query.*
 import dev.komu.ahwen.record.Schema
 
-class Parser(private val lex: Lexer) {
+class Parser(query: String) {
 
     // Methods for parsing predicates, terms, etc.
+
+    private val lex = Lexer(query)
 
     fun field(): String =
         lex.eatId()

@@ -13,7 +13,7 @@ class DeleteData(val table: String, val predicate: Predicate) : CommandData()
 
 class ModifyData(val table: String, val fieldName: String, val newValue: Expression, val predicate: Predicate) : CommandData()
 
-class QueryData(val fields: List<String>, val tables: List<String>, val predicate: Predicate) : CommandData() {
+class QueryData(val fields: List<String>, val tables: List<String>, val predicate: Predicate) {
     override fun toString(): String = buildString {
         append("select ")
         fields.joinTo(this, separator = ", ")
@@ -28,6 +28,9 @@ class QueryData(val fields: List<String>, val tables: List<String>, val predicat
 
 class CreateTableData(val table: String, val schema: Schema) : CommandData()
 
-class CreateViewData(val view: String, query: QueryData) : CommandData()
+class CreateViewData(val view: String, private val query: QueryData) : CommandData() {
+    val viewDefinition: String
+        get() = query.toString()
+}
 
 class CreateIndexData(val index: String, val table: String, val field: String) : CommandData()
