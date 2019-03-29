@@ -31,13 +31,13 @@ class Lexer(s: String) {
     // methods to eat the current token
     fun eatDelim(d: Char) {
         if (!matchDelim(d))
-            throw BadSyntaxException()
+            throw BadSyntaxException("expected $d")
         nextToken()
     }
 
     fun eatIntConstant(): Int {
         if (!matchIntConstant())
-            throw BadSyntaxException()
+            throw BadSyntaxException("expected int constant")
         val value = tok.nval.toInt()
         nextToken()
         return value
@@ -45,7 +45,7 @@ class Lexer(s: String) {
 
     fun eatStringConstant(): String {
         if (!matchStringConstant())
-            throw BadSyntaxException()
+            throw BadSyntaxException("expected string constant")
         val value = tok.sval
         nextToken()
         return value
@@ -53,13 +53,13 @@ class Lexer(s: String) {
 
     fun eatKeyword(w: String) {
         if (!matchKeyword(w))
-            throw BadSyntaxException()
+            throw BadSyntaxException("expected keyword $w")
         nextToken()
     }
 
     fun eatId(): String {
         if (!matchId())
-            throw BadSyntaxException()
+            throw BadSyntaxException("expected identifier")
         val value = tok.sval
         nextToken()
         return value
@@ -69,7 +69,7 @@ class Lexer(s: String) {
         try {
             tok.nextToken()
         } catch (e: IOException) {
-            throw BadSyntaxException()
+            throw BadSyntaxException("unexpected eof")
         }
     }
 
