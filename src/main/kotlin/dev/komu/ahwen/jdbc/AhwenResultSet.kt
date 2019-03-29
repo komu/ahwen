@@ -31,6 +31,9 @@ class AhwenResultSet(private val rows: MutableList<Map<String, Constant>>) : Res
     override fun getInt(columnLabel: String): Int =
         getObject(columnLabel) as Int
 
+    override fun getString(columnLabel: String): String =
+        getObject(columnLabel) as String
+
     override fun close() {
     }
 
@@ -411,10 +414,6 @@ class AhwenResultSet(private val rows: MutableList<Map<String, Constant>>) : Res
     }
 
     override fun getString(columnIndex: Int): String {
-        error("unsupported operation")
-    }
-
-    override fun getString(columnLabel: String?): String {
         error("unsupported operation")
     }
 

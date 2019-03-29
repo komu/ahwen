@@ -6,14 +6,15 @@ import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.file.FileManager
 import dev.komu.ahwen.log.LogManager
 import dev.komu.ahwen.tx.concurrency.ConcurrencyManager
+import dev.komu.ahwen.tx.concurrency.LockTable
 import dev.komu.ahwen.tx.recovery.RecoveryManager
 import java.util.concurrent.atomic.AtomicInteger
 
-class Transaction(logManager: LogManager, bufferManager: BufferManager, private val fileManager: FileManager) {
+class Transaction(logManager: LogManager, bufferManager: BufferManager, lockTable: LockTable, private val fileManager: FileManager) {
 
     private val txnum = nextTxNum.getAndDecrement()
     private val recoveryManager = RecoveryManager(txnum, logManager, bufferManager)
-    private val concurrencyManager = ConcurrencyManager()
+    private val concurrencyManager = ConcurrencyManager(lockTable)
     private val myBuffers = BufferList(bufferManager)
 
     fun commit() {

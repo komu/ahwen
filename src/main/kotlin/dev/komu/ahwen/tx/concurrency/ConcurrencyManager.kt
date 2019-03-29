@@ -2,7 +2,7 @@ package dev.komu.ahwen.tx.concurrency
 
 import dev.komu.ahwen.file.Block
 
-class ConcurrencyManager {
+class ConcurrencyManager(private val lockTable: LockTable) {
 
     private val locks = mutableMapOf<Block, String>()
 
@@ -25,10 +25,5 @@ class ConcurrencyManager {
         for (block in locks.keys)
             lockTable.unlock(block)
         locks.clear()
-    }
-
-    companion object {
-
-        private val lockTable = LockTable() // TODO: Avoid static data
     }
 }
