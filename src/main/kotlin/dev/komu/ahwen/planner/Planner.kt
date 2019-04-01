@@ -1,5 +1,6 @@
 package dev.komu.ahwen.planner
 
+import dev.komu.ahwen.index.planner.IndexUpdatePlanner
 import dev.komu.ahwen.metadata.MetadataManager
 import dev.komu.ahwen.parse.*
 import dev.komu.ahwen.query.Plan
@@ -8,7 +9,7 @@ import dev.komu.ahwen.tx.Transaction
 class Planner(metadataManager: MetadataManager) {
 
     private val queryPlanner = BasicQueryPlanner(this, metadataManager)
-    private val updatePlanner = BasicUpdatePlanner(metadataManager)
+    private val updatePlanner = IndexUpdatePlanner(metadataManager)
 
     fun createQueryPlan(sql: String, tx: Transaction): Plan {
         val parser = Parser(sql)

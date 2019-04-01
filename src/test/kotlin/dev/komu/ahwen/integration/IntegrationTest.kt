@@ -15,6 +15,7 @@ class IntegrationTest {
         val results = mutableListOf<Int>()
         connection.createStatement().use { stmt ->
             stmt.executeUpdate("create table person (id int, name varchar(30))")
+            stmt.executeUpdate("create index personIdIx on person (id)")
             stmt.executeUpdate("insert into person (id, name) values (1, 'Fred')")
             stmt.executeUpdate("insert into person (id, name) values (2, 'Bob')")
             stmt.executeUpdate("insert into person (id, name) values (3, 'Hank')")
