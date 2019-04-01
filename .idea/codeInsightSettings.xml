@@ -2,9 +2,11 @@
 <project version="4">
   <component name="JavaProjectCodeInsightSettings">
     <excluded-names>
+      <name>com.sun</name>
       <name>java.util.logging.LogManager</name>
       <name>javax.xml.validation.Schema</name>
       <name>jdk.nashorn</name>
+      <name>jdk.vm</name>
       <name>org.graalvm</name>
       <name>sun.jvm</name>
     </excluded-names>
