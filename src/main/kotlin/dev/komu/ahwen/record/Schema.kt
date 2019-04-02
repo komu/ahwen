@@ -41,6 +41,13 @@ class Schema {
     fun length(name: String) =
         lookup(name).length
 
+    operator fun plus(rhs: Schema): Schema {
+        val result = Schema()
+        result.addAll(this)
+        result.addAll(rhs)
+        return result
+    }
+
     private fun lookup(name: String) =
         info[name] ?: error("no field $name")
 

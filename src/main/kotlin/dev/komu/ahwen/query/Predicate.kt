@@ -33,10 +33,7 @@ class Predicate() {
 
     fun joinPredicate(schema1: Schema, schema2: Schema): Predicate? {
         val result = Predicate()
-        val newSchema = Schema().apply {
-            addAll(schema1)
-            addAll(schema2)
-        }
+        val newSchema = schema1 + schema2
 
         for (term in terms)
             if (!term.appliesTo(schema1) && !term.appliesTo(schema2) && term.appliesTo(newSchema))

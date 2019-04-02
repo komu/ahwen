@@ -1,13 +1,8 @@
 package dev.komu.ahwen.query
 
-import dev.komu.ahwen.record.Schema
-
 class ProductPlan(private val p1: Plan, private val p2: Plan) : Plan {
 
-    override val schema = Schema().apply {
-        addAll(p1.schema)
-        addAll(p2.schema)
-    }
+    override val schema = p1.schema + p2.schema
 
     override fun open(): Scan =
         ProductScan(p1.open(), p2.open())

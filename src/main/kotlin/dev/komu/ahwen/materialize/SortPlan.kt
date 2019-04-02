@@ -3,6 +3,7 @@ package dev.komu.ahwen.materialize
 import dev.komu.ahwen.query.Plan
 import dev.komu.ahwen.query.Scan
 import dev.komu.ahwen.query.UpdateScan
+import dev.komu.ahwen.query.insertRowFrom
 import dev.komu.ahwen.tx.Transaction
 
 class SortPlan(
@@ -101,9 +102,7 @@ class SortPlan(
     }
 
     private fun copy(src: Scan, dest: UpdateScan): Boolean {
-        dest.insert()
-        for (field in schema.fields)
-            dest.setVal(field, src.getVal(field))
+        dest.insertRowFrom(src, schema)
         return src.next()
     }
 }

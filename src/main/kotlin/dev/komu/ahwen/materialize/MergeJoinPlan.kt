@@ -2,7 +2,6 @@ package dev.komu.ahwen.materialize
 
 import dev.komu.ahwen.query.Plan
 import dev.komu.ahwen.query.Scan
-import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.tx.Transaction
 
 class MergeJoinPlan(
@@ -16,10 +15,7 @@ class MergeJoinPlan(
     private val p1 = SortPlan(p1, listOf(fieldName1), tx)
     private val p2 = SortPlan(p2, listOf(fieldName2), tx)
 
-    override val schema = Schema().apply {
-        addAll(p1.schema)
-        addAll(p2.schema)
-    }
+    override val schema = p1.schema + p2.schema
 
     override fun open(): Scan {
         val s1 = p1.open()
