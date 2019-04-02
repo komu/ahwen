@@ -45,4 +45,7 @@ class MultiBufferProductPlan(
         }
         return tt
     }
+
+    override fun toString() =
+        "[MultiBufferProductPlan lhs=$lhs, rhs=$rhs]"
 }

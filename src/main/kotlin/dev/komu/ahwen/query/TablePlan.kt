@@ -13,7 +13,7 @@ class TablePlan(
     private val ti = metadataManager.getTableInfo(tableName, tx)
     private val si = metadataManager.getStatInfo(tableName, ti, tx)
 
-    override fun open(): UpdateScan =
+    override fun open(): TableScan =
         TableScan(ti, tx)
 
     override val blocksAccessed: Int
@@ -27,4 +27,6 @@ class TablePlan(
 
     override val schema: Schema
         get() = ti.schema
+
+    override fun toString() = "[TablePlan name=${ti.tableName}]"
 }

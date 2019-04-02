@@ -13,4 +13,7 @@ class SelectPlan(private val plan: Plan, private val predicate: Predicate) : Pla
             1
         else
             minOf(plan.distinctValues(fieldName), recordsOutput)
+
+    override fun toString() =
+        "[SelectPlan plan=$plan, predicate=$predicate]"
 }

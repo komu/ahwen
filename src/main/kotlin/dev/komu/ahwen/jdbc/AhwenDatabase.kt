@@ -22,7 +22,7 @@ class AhwenDatabase(dir: File) {
             metadataManager = MetadataManager(fileManager.isNew, tx)
             tx.commit()
         }
-        planner = Planner(metadataManager)
+        planner = Planner(metadataManager, bufferManager)
     }
 
     fun beginTransaction() =

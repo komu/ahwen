@@ -1,14 +1,17 @@
 package dev.komu.ahwen.planner
 
+import dev.komu.ahwen.buffer.BufferManager
 import dev.komu.ahwen.index.planner.IndexUpdatePlanner
+import dev.komu.ahwen.index.query.HeuristicQueryPlanner
 import dev.komu.ahwen.metadata.MetadataManager
 import dev.komu.ahwen.parse.*
 import dev.komu.ahwen.query.Plan
 import dev.komu.ahwen.tx.Transaction
 
-class Planner(metadataManager: MetadataManager) {
+class Planner(metadataManager: MetadataManager, bufferManager: BufferManager) {
 
-    private val queryPlanner = BasicQueryPlanner(this, metadataManager)
+//    private val queryPlanner = BasicQueryPlanner(this, metadataManager)
+    private val queryPlanner = HeuristicQueryPlanner(metadataManager, bufferManager)
     private val updatePlanner = IndexUpdatePlanner(metadataManager)
 
     fun createQueryPlan(sql: String, tx: Transaction): Plan {
