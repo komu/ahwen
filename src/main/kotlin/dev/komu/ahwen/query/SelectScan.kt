@@ -2,7 +2,7 @@ package dev.komu.ahwen.query
 
 import dev.komu.ahwen.record.RID
 
-class SelectScan(private val scan: Scan, private val predicate: Predicate) : Scan by scan, UpdateScan {
+class SelectScan(private val scan: Scan, private val predicate: Predicate) : Scan, UpdateScan {
 
     override fun next(): Boolean {
         while (scan.next())
@@ -10,6 +10,20 @@ class SelectScan(private val scan: Scan, private val predicate: Predicate) : Sca
                 return true
         return false
     }
+
+    override fun beforeFirst() {
+        scan.beforeFirst()
+    }
+
+    override fun close() {
+        scan.close()
+    }
+
+    override fun getVal(fieldName: String): Constant =
+        scan.getVal(fieldName)
+
+    override fun hasField(fieldName: String): Boolean =
+        scan.hasField(fieldName)
 
     override fun setVal(fieldName: String, value: Constant) {
         val us = scan as UpdateScan

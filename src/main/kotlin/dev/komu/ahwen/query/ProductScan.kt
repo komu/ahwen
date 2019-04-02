@@ -27,12 +27,6 @@ class ProductScan(private val s1: Scan, private val s2: Scan) : Scan {
     override fun getVal(fieldName: String): Constant =
         if (s1.hasField(fieldName)) s1.getVal(fieldName) else s2.getVal(fieldName)
 
-    override fun getInt(fieldName: String): Int =
-        if (s1.hasField(fieldName)) s1.getInt(fieldName) else s2.getInt(fieldName)
-
-    override fun getString(fieldName: String): String =
-        if (s1.hasField(fieldName)) s1.getString(fieldName) else s2.getString(fieldName)
-
     override fun hasField(fieldName: String): Boolean =
         s1.hasField(fieldName) || s2.hasField(fieldName)
 }
