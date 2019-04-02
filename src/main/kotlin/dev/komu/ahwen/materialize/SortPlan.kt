@@ -16,11 +16,12 @@ class SortPlan(
     private val comparator = RecordComparator(sortFields)
 
     override fun open(): SortScan {
-        val src = plan.open()
-        var runs = splitIntoRuns(src)
+        var runs = plan.open().use { src ->
+            splitIntoRuns(src)
+        }
+
         while (runs.size > 2)
             runs = doMergeIteration(runs)
-        src.close()
 
         return SortScan(runs, comparator)
     }

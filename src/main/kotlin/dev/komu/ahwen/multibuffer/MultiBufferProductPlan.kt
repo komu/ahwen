@@ -38,13 +38,11 @@ class MultiBufferProductPlan(
         if (lhs.schema.hasField(fieldName)) lhs.distinctValues(fieldName) else rhs.distinctValues(fieldName)
 
     private fun copyRecordsFrom(plan: Plan): TempTable {
-        val src = plan.open()
         val schema = plan.schema
         val tt = TempTable(schema, tx)
-        val dest = tt.open()
-        dest.copyFrom(src, schema)
-        src.close()
-        dest.close()
+        tt.open().use { dest ->
+            dest.copyFrom(plan, schema)
+        }
         return tt
     }
 }

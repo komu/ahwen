@@ -13,7 +13,7 @@ class TablePlan(
     private val ti = metadataManager.getTableInfo(tableName, tx)
     private val si = metadataManager.getStatInfo(tableName, ti, tx)
 
-    override fun open(): Scan =
+    override fun open(): UpdateScan =
         TableScan(ti, tx)
 
     override val blocksAccessed: Int

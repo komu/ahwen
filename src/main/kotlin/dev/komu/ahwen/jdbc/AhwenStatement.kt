@@ -1,6 +1,7 @@
 package dev.komu.ahwen.jdbc
 
 import dev.komu.ahwen.query.Constant
+import dev.komu.ahwen.query.forEach
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.utils.unimplemented
 import java.sql.ResultSet
@@ -14,13 +15,13 @@ class AhwenStatement(private val db: AhwenDatabase) : Statement by unimplemented
 
     override fun executeQuery(sql: String): ResultSet = withTransaction { tx ->
         val plan = db.planner.createQueryPlan(sql, tx)
-        val scan = plan.open()
-        val rows = mutableListOf<Map<String, Constant>>()
-        while (scan.next()) {
-            rows += plan.schema.fields.map { it to scan.getVal(it) }.toMap()
+        plan.open().use { scan ->
+            val rows = mutableListOf<Map<String, Constant>>()
+            scan.forEach {
+                rows += plan.schema.fields.map { it to scan.getVal(it) }.toMap()
+            }
+            return AhwenResultSet(rows)
         }
-        scan.close()
-        return AhwenResultSet(rows)
     }
 
     private inline fun <T> withTransaction(callback: (Transaction) -> T): T {

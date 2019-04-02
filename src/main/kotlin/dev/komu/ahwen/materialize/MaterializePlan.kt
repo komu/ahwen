@@ -13,11 +13,8 @@ class MaterializePlan(private val srcPlan: Plan, private val tx: Transaction) : 
     override fun open(): Scan {
         val schema = srcPlan.schema
         val temp = TempTable(schema, tx)
-        val src = srcPlan.open()
         val dest = temp.open()
-
-        dest.copyFrom(src, schema)
-        src.close()
+        dest.copyFrom(srcPlan, schema)
         dest.beforeFirst()
         return dest
     }

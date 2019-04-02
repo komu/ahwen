@@ -15,6 +15,12 @@ interface UpdateScan : Scan {
     fun moveToRid(rid: RID)
 }
 
+fun UpdateScan.copyFrom(srcPlan: Plan, schema: Schema) {
+    srcPlan.open().use { src ->
+        copyFrom(src, schema)
+    }
+}
+
 fun UpdateScan.copyFrom(src: Scan, schema: Schema) {
     while (src.next())
         insertRowFrom(src, schema)

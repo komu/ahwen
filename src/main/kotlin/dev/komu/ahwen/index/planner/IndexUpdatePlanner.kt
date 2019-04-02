@@ -5,7 +5,7 @@ import dev.komu.ahwen.parse.*
 import dev.komu.ahwen.planner.UpdatePlanner
 import dev.komu.ahwen.query.SelectPlan
 import dev.komu.ahwen.query.TablePlan
-import dev.komu.ahwen.query.UpdateScan
+import dev.komu.ahwen.query.forEach
 import dev.komu.ahwen.tx.Transaction
 
 class IndexUpdatePlanner(private val metadataManager: MetadataManager) : UpdatePlanner {
@@ -13,47 +13,46 @@ class IndexUpdatePlanner(private val metadataManager: MetadataManager) : UpdateP
     override fun executeInsert(data: InsertData, tx: Transaction): Int {
         val plan = TablePlan(data.table, metadataManager, tx)
 
-        val scan = plan.open() as UpdateScan
-        scan.insert()
-        val rid = scan.rid
+        plan.open().use { scan ->
+            scan.insert()
+            val rid = scan.rid
 
-        val indices = metadataManager.getIndexInfo(data.table, tx)
+            val indices = metadataManager.getIndexInfo(data.table, tx)
 
-        for ((field, value) in data.fields.zip(data.values)) {
-            scan.setVal(field, value)
+            for ((field, value) in data.fields.zip(data.values)) {
+                scan.setVal(field, value)
 
-            val indexInfo = indices[field]
-            if (indexInfo != null) {
-                val index = indexInfo.open()
-                index.insert(value, rid)
-                index.close()
+                val indexInfo = indices[field]
+                if (indexInfo != null) {
+                    val index = indexInfo.open()
+                    index.insert(value, rid)
+                    index.close()
+                }
             }
         }
-        scan.close()
         return 1
     }
 
     override fun executeDelete(data: DeleteData, tx: Transaction): Int {
         val tablePlan = TablePlan(data.table, metadataManager, tx)
-        val select = SelectPlan(tablePlan, data.predicate)
-        val scan = select.open() as UpdateScan
-        val indices = metadataManager.getIndexInfo(data.table, tx)
+        SelectPlan(tablePlan, data.predicate).open().use { scan ->
+            val indices = metadataManager.getIndexInfo(data.table, tx)
 
-        var count = 0
-        while (scan.next()) {
-            val rid = scan.rid
+            var count = 0
+            scan.forEach {
+                val rid = scan.rid
 
-            for ((fieldName, indexInfo) in indices) {
-                val value = scan.getVal(fieldName)
-                val index = indexInfo.open()
-                index.delete(value, rid)
-                index.close()
+                for ((fieldName, indexInfo) in indices) {
+                    val value = scan.getVal(fieldName)
+                    val index = indexInfo.open()
+                    index.delete(value, rid)
+                    index.close()
+                }
+                scan.delete()
+                count++
             }
-            scan.delete()
-            count++
+            return count
         }
-        scan.close()
-        return count
     }
 
     override fun executeModify(data: ModifyData, tx: Transaction): Int {
@@ -62,24 +61,24 @@ class IndexUpdatePlanner(private val metadataManager: MetadataManager) : UpdateP
         val indexInfo = metadataManager.getIndexInfo(data.table, tx)[data.fieldName]
         val index = indexInfo?.open()
 
-        val scan = select.open() as UpdateScan
-        var count = 0
-        while (scan.next()) {
-            val newValue = data.newValue.evaluate(scan)
-            val oldValue = scan.getVal(data.fieldName)
-            scan.setVal(data.fieldName, newValue)
+        select.open().use { scan ->
+            var count = 0
+            scan.forEach {
+                val newValue = data.newValue.evaluate(scan)
+                val oldValue = scan.getVal(data.fieldName)
+                scan.setVal(data.fieldName, newValue)
 
-            if (index != null) {
-                val rid = scan.rid
-                index.delete(oldValue, rid)
-                index.insert(newValue, rid)
+                if (index != null) {
+                    val rid = scan.rid
+                    index.delete(oldValue, rid)
+                    index.insert(newValue, rid)
+                }
+                count++
             }
-            count++
-        }
 
-        index?.close()
-        scan.close()
-        return count
+            index?.close()
+            return count
+        }
     }
 
     override fun executeCreateTable(data: CreateTableData, tx: Transaction): Int {
