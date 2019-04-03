@@ -25,4 +25,6 @@ class IndexJoinPlan(
 
     override fun distinctValues(fieldName: String): Int =
         if (p1.schema.hasField(fieldName)) p1.distinctValues(fieldName) else p2.distinctValues(fieldName)
+
+    override fun toString() = "[IndexJoinPlan p1=$p1, p2=$p2, index=$indexInfo, joinField=$joinField]"
 }

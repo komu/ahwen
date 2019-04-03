@@ -1,5 +1,6 @@
 package dev.komu.ahwen.metadata
 
+import dev.komu.ahwen.metadata.TableManager.Companion.checkNameLength
 import dev.komu.ahwen.record.RecordFile
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.tx.Transaction
@@ -16,6 +17,7 @@ class ViewManager(isNew: Boolean, private val tableManager: TableManager, tx: Tr
     }
 
     fun createView(name: String, def: String, tx: Transaction) {
+        checkNameLength(name, "name")
         val ti = tableManager.getTableInfo("viewcat", tx)
         val rf = RecordFile(ti, tx)
         rf.insert()

@@ -27,6 +27,10 @@ class IndexManager(
     }
 
     fun createIndex(indexName: String, tableName: String, fieldName: String, tx: Transaction) {
+        TableManager.checkNameLength(indexName, "indexName")
+        TableManager.checkNameLength(tableName, "tableName")
+        TableManager.checkNameLength(fieldName, "fieldName")
+
         val rf = RecordFile(ti, tx)
         rf.insert()
         rf.setString("indexname", indexName)

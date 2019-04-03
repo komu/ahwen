@@ -27,6 +27,7 @@ class TableManager(isNew: Boolean, tx: Transaction) {
     }
 
     fun createTable(tableName: String, schema: Schema, tx: Transaction) {
+        checkNameLength(tableName, "name")
         val ti = TableInfo(tableName, schema)
 
         // insert one record into tblcat
@@ -82,5 +83,9 @@ class TableManager(isNew: Boolean, tx: Transaction) {
 
     companion object {
         const val MAX_NAME = 16
+
+        fun checkNameLength(name: String, description: String) {
+            require(name.length <= MAX_NAME) { "max name length is $MAX_NAME, but $description '$name' is '${name.length}"}
+        }
     }
 }

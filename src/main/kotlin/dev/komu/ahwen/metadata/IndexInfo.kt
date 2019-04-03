@@ -50,4 +50,6 @@ class IndexInfo(
                 error("invalid type $type")
         }
     }
+
+    override fun toString() = "[Index name=$indexName, field$fieldName]"
 }

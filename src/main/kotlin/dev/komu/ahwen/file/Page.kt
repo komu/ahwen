@@ -35,9 +35,12 @@ class Page(private val fileManager: FileManager) {
 
     @Synchronized
     fun getString(offset: Int): String {
+        assert(offset in 0..(BLOCK_SIZE - 1)) { "invalid offset: $offset" }
         contents.position(offset)
         val len = contents.int
         val bytes = ByteArray(len)
+
+        assert(offset + len <= BLOCK_SIZE) { "invalid length: $offset+$len > $BLOCK_SIZE"}
         contents.get(bytes)
         return String(bytes, charset)
     }
