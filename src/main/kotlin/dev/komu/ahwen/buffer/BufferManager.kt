@@ -1,5 +1,3 @@
-@file:Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
-
 package dev.komu.ahwen.buffer
 
 import dev.komu.ahwen.file.Block
