@@ -8,7 +8,7 @@ import dev.komu.ahwen.query.StringConstant
 import dev.komu.ahwen.record.RID
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction
-import java.sql.Types
+import dev.komu.ahwen.types.SqlType
 
 class BTreePage(
     currentBlock: Block,
@@ -111,9 +111,8 @@ class BTreePage(
     private fun getVal(slot: Int, fieldName: String): Constant {
         val type = ti.schema.type(fieldName)
         return when (type) {
-            Types.INTEGER -> IntConstant(getInt(slot, fieldName))
-            Types.VARCHAR -> StringConstant(getString(slot, fieldName))
-            else -> error("unknown type: $type")
+            SqlType.INTEGER -> IntConstant(getInt(slot, fieldName))
+            SqlType.VARCHAR -> StringConstant(getString(slot, fieldName))
         }
     }
 
@@ -130,9 +129,8 @@ class BTreePage(
     private fun setVal(slot: Int, fieldName: String, value: Constant) {
         val type = ti.schema.type(fieldName)
         when (type) {
-            Types.INTEGER -> setInt(slot, fieldName, value.value as Int)
-            Types.VARCHAR -> setString(slot, fieldName, value.value as String)
-            else -> error("unknown type: $type")
+            SqlType.INTEGER -> setInt(slot, fieldName, value.value as Int)
+            SqlType.VARCHAR -> setString(slot, fieldName, value.value as String)
         }
     }
 

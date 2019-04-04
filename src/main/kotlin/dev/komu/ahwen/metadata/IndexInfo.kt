@@ -5,7 +5,7 @@ import dev.komu.ahwen.index.Index
 import dev.komu.ahwen.index.btree.BTreeIndex
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.tx.Transaction
-import java.sql.Types
+import dev.komu.ahwen.types.SqlType
 
 class IndexInfo(
     private val indexName: String,
@@ -42,12 +42,10 @@ class IndexInfo(
         addIntField("id")
         val type = ti.schema.type(fieldName)
         when (type) {
-            Types.INTEGER ->
+            SqlType.INTEGER ->
                 addIntField("dataval")
-            Types.VARCHAR ->
+            SqlType.VARCHAR ->
                 addStringField("dataval", ti.schema.length(fieldName))
-            else ->
-                error("invalid type $type")
         }
     }
 

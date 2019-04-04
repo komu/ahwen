@@ -1,6 +1,6 @@
 package dev.komu.ahwen.record
 
-import java.sql.Types
+import dev.komu.ahwen.types.SqlType
 
 class TableInfo(
     val tableName: String,
@@ -30,9 +30,8 @@ class TableInfo(
         private fun Schema.lengthInBytes(fieldName: String): Int {
             val type = type(fieldName)
             return when (type) {
-                Types.INTEGER -> Int.SIZE_BYTES
-                Types.VARCHAR -> length(fieldName)
-                else -> error("invalid type $type for $fieldName")
+                SqlType.INTEGER -> Int.SIZE_BYTES
+                SqlType.VARCHAR -> length(fieldName)
             }
         }
     }

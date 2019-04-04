@@ -4,7 +4,7 @@ import dev.komu.ahwen.buffer.PageFormatter
 import dev.komu.ahwen.file.Page
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
 import dev.komu.ahwen.record.TableInfo
-import java.sql.Types
+import dev.komu.ahwen.types.SqlType
 
 class BTreePageFormatter(
     private val ti: TableInfo,
@@ -29,9 +29,8 @@ class BTreePageFormatter(
             val offset = ti.offset(fieldName)
             val type = ti.schema.type(fieldName)
             when (type) {
-                Types.INTEGER -> page.setInt(pos + offset, 0)
-                Types.VARCHAR -> page.setString(pos + offset, "")
-                else -> error("invalid type $type")
+                SqlType.INTEGER -> page.setInt(pos + offset, 0)
+                SqlType.VARCHAR -> page.setString(pos + offset, "")
             }
         }
     }

@@ -3,7 +3,7 @@ package dev.komu.ahwen.record
 import dev.komu.ahwen.buffer.PageFormatter
 import dev.komu.ahwen.file.Page
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
-import java.sql.Types
+import dev.komu.ahwen.types.SqlType
 
 class RecordFormatter(private val ti: TableInfo) : PageFormatter {
 
@@ -23,12 +23,10 @@ class RecordFormatter(private val ti: TableInfo) : PageFormatter {
             val type = ti.schema.type(field)
             val position = pos + Int.SIZE_BYTES + offset
             when (type) {
-                Types.INTEGER ->
+                SqlType.INTEGER ->
                     page.setInt(position, 0)
-                Types.VARCHAR ->
+                SqlType.VARCHAR ->
                     page.setString(position, "")
-                else ->
-                    error("unexpected type $type")
             }
         }
     }

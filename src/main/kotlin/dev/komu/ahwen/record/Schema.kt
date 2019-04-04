@@ -1,13 +1,14 @@
 package dev.komu.ahwen.record
 
-import java.sql.Types.INTEGER
-import java.sql.Types.VARCHAR
+import dev.komu.ahwen.types.SqlType
+import dev.komu.ahwen.types.SqlType.INTEGER
+import dev.komu.ahwen.types.SqlType.VARCHAR
 
 class Schema {
 
     private val info = mutableMapOf<String, FieldInfo>()
 
-    fun addField(name: String, type: Int, length: Int) {
+    fun addField(name: String, type: SqlType, length: Int) {
         info[name] = FieldInfo(type, length)
     }
 
@@ -51,5 +52,5 @@ class Schema {
     private fun lookup(name: String) =
         info[name] ?: error("no field $name")
 
-    private class FieldInfo(val type: Int, val length: Int)
+    private class FieldInfo(val type: SqlType, val length: Int)
 }

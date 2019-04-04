@@ -9,7 +9,7 @@ import dev.komu.ahwen.record.RID
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction
-import java.sql.Types
+import dev.komu.ahwen.types.SqlType
 import kotlin.math.ln
 
 class BTreeIndex(
@@ -40,9 +40,8 @@ class BTreeIndex(
         if (page.numRecs == 0) {
             val fieldType = dirSchema.type("dataval")
             val minValue = when (fieldType) {
-                Types.INTEGER -> IntConstant(Int.MIN_VALUE)
-                Types.VARCHAR -> StringConstant("")
-                else -> error("invalid type $fieldType")
+                SqlType.INTEGER -> IntConstant(Int.MIN_VALUE)
+                SqlType.VARCHAR -> StringConstant("")
             }
             page.insertDir(0, minValue, 0)
         }

@@ -4,7 +4,7 @@ import dev.komu.ahwen.record.RID
 import dev.komu.ahwen.record.RecordFile
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction
-import java.sql.Types
+import dev.komu.ahwen.types.SqlType
 
 class TableScan(ti: TableInfo, tx: Transaction) : UpdateScan {
 
@@ -25,9 +25,8 @@ class TableScan(ti: TableInfo, tx: Transaction) : UpdateScan {
     override fun getVal(fieldName: String): Constant {
         val type = schema.type(fieldName)
         return when (type) {
-            Types.INTEGER -> IntConstant(rf.getInt(fieldName))
-            Types.VARCHAR -> StringConstant(rf.getString(fieldName))
-            else -> error("invalid type $type")
+            SqlType.INTEGER -> IntConstant(rf.getInt(fieldName))
+            SqlType.VARCHAR -> StringConstant(rf.getString(fieldName))
         }
     }
 
@@ -43,9 +42,8 @@ class TableScan(ti: TableInfo, tx: Transaction) : UpdateScan {
     override fun setVal(fieldName: String, value: Constant) {
         val type = schema.type(fieldName)
         return when (type) {
-            Types.INTEGER -> rf.setInt(fieldName, value.value as Int)
-            Types.VARCHAR -> rf.setString(fieldName, value.value as String)
-            else -> error("invalid type $type")
+            SqlType.INTEGER -> rf.setInt(fieldName, value.value as Int)
+            SqlType.VARCHAR -> rf.setString(fieldName, value.value as String)
         }
     }
 

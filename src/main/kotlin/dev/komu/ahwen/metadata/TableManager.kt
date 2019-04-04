@@ -4,6 +4,7 @@ import dev.komu.ahwen.record.RecordFile
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.types.SqlType
 
 class TableManager(isNew: Boolean, tx: Transaction) {
 
@@ -43,7 +44,7 @@ class TableManager(isNew: Boolean, tx: Transaction) {
             fcatFile.insert()
             fcatFile.setString("tblname", tableName)
             fcatFile.setString("fldname", field)
-            fcatFile.setInt("type", schema.type(field))
+            fcatFile.setInt("type", schema.type(field).code)
             fcatFile.setInt("length", schema.length(field))
             fcatFile.setInt("offset", ti.offset(field))
         }
@@ -70,7 +71,7 @@ class TableManager(isNew: Boolean, tx: Transaction) {
         while (fcatFile.next()) {
             if (fcatFile.getString("tblname") == tableName) {
                 val field = fcatFile.getString("fldname")
-                val type = fcatFile.getInt("type")
+                val type = SqlType(fcatFile.getInt("type"))
                 val length = fcatFile.getInt("length")
 
                 offsets[field] = fcatFile.getInt("offset")

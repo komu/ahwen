@@ -8,7 +8,7 @@ import dev.komu.ahwen.query.StringConstant
 import dev.komu.ahwen.record.RecordPage
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction
-import java.sql.Types
+import dev.komu.ahwen.types.SqlType
 
 class ChunkScan(
     ti: TableInfo,
@@ -46,9 +46,8 @@ class ChunkScan(
     override fun getVal(fieldName: String): Constant {
         val type = schema.type(fieldName)
         return when (type) {
-            Types.INTEGER -> IntConstant(rp.getInt(fieldName))
-            Types.VARCHAR -> StringConstant(rp.getString(fieldName))
-            else -> error("unknown type: $type")
+            SqlType.INTEGER -> IntConstant(rp.getInt(fieldName))
+            SqlType.VARCHAR -> StringConstant(rp.getString(fieldName))
         }
     }
 
