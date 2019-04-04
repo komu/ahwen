@@ -31,7 +31,7 @@ class TableInfo(
             val type = type(fieldName)
             return when (type) {
                 SqlType.INTEGER -> Int.SIZE_BYTES
-                SqlType.VARCHAR -> length(fieldName)
+                SqlType.VARCHAR -> Int.SIZE_BYTES + length(fieldName)
             }
         }
     }
