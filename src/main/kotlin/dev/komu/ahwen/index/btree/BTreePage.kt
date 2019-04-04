@@ -136,7 +136,7 @@ class BTreePage(
 
     private fun insert(slot: Int) {
         var i = numRecs
-        while (i > 0) {
+        while (i > slot) {
             copyRecord(i - 1, i)
             i--
         }
