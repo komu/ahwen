@@ -25,7 +25,6 @@ class HeuristicQueryPlanner(
         while (!tablePlanners.isEmpty())
             currentPlan = tablePlanners.getLowestJoinPlan(currentPlan) ?: tablePlanners.getLowestProductPlan(currentPlan)
 
-        println(currentPlan)
         return ProjectPlan(currentPlan, data.fields)
     }
 

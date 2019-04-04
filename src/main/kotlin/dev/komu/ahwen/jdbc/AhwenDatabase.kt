@@ -2,6 +2,7 @@ package dev.komu.ahwen.jdbc
 
 import dev.komu.ahwen.buffer.BufferManager
 import dev.komu.ahwen.file.FileManager
+import dev.komu.ahwen.file.FileStats
 import dev.komu.ahwen.log.LogManager
 import dev.komu.ahwen.metadata.MetadataManager
 import dev.komu.ahwen.planner.Planner
@@ -16,6 +17,9 @@ class AhwenDatabase(dir: File) {
     private val lockTable = LockTable()
     private val metadataManager: MetadataManager
     val planner: Planner
+
+    val fileStats: FileStats
+        get() = fileManager.stats
 
     init {
         Transaction(logManager, bufferManager, lockTable, fileManager).also { tx ->

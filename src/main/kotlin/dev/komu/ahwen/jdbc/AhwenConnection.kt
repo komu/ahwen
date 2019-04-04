@@ -7,7 +7,7 @@ import java.sql.Statement
 
 class AhwenConnection(dir: File) : Connection by unimplemented() {
 
-    private val db = AhwenDatabase(dir)
+    val db = AhwenDatabase(dir)
 
     override fun createStatement(): Statement =
         AhwenStatement(db)
