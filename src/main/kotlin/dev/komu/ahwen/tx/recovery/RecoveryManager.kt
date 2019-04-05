@@ -3,6 +3,7 @@ package dev.komu.ahwen.tx.recovery
 import dev.komu.ahwen.buffer.Buffer
 import dev.komu.ahwen.buffer.BufferManager
 import dev.komu.ahwen.file.Block
+import dev.komu.ahwen.log.LSN
 import dev.komu.ahwen.log.LogManager
 
 class RecoveryManager(
@@ -39,22 +40,22 @@ class RecoveryManager(
         logManager.flush(lsn)
     }
 
-    fun setInt(buffer: Buffer, offset: Int, newValue: Int): Int {
+    fun setInt(buffer: Buffer, offset: Int, @Suppress("UNUSED_PARAMETER") newValue: Int): LSN {
         val oldValue = buffer.getInt(offset)
         val block = buffer.block ?: error("no block for buffer")
         return if (isTemporaryBlock(block)) {
-            -1
+            LSN.undefined
         } else {
             val record = SetIntRecord(txnum, block, offset, oldValue)
             record.writeToLog(logManager)
         }
     }
 
-    fun setString(buffer: Buffer, offset: Int, newValue: String): Int {
+    fun setString(buffer: Buffer, offset: Int, @Suppress("UNUSED_PARAMETER") newValue: String): LSN {
         val oldValue = buffer.getString(offset)
         val block = buffer.block ?: error("no block for buffer")
         return if (isTemporaryBlock(block)) {
-            -1
+            LSN.undefined
         } else {
             val record = SetStringRecord(txnum, block, offset, oldValue)
             record.writeToLog(logManager)

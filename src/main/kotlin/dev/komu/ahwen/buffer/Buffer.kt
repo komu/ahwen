@@ -3,6 +3,7 @@ package dev.komu.ahwen.buffer
 import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.file.FileManager
 import dev.komu.ahwen.file.Page
+import dev.komu.ahwen.log.LSN
 import dev.komu.ahwen.log.LogManager
 
 class Buffer(fileManager: FileManager, private val logManager: LogManager) {
@@ -12,7 +13,7 @@ class Buffer(fileManager: FileManager, private val logManager: LogManager) {
         private set
     private var pins = 0
     private var modifiedBy: Int? = null
-    private var logSequenceNumber = 0
+    private var logSequenceNumber = LSN.zero
 
     fun getInt(offset: Int): Int =
         contents.getInt(offset)
@@ -20,16 +21,16 @@ class Buffer(fileManager: FileManager, private val logManager: LogManager) {
     fun getString(offset: Int): String =
         contents.getString(offset)
 
-    fun setInt(offset: Int, value: Int, txnum: Int, lsn: Int) {
+    fun setInt(offset: Int, value: Int, txnum: Int, lsn: LSN) {
         modifiedBy = txnum
-        if (lsn >= 0)
+        if (lsn >= LSN.zero)
             logSequenceNumber = lsn
         contents.setInt(offset, value)
     }
 
-    fun setString(offset: Int, value: String, txnum: Int, lsn: Int) {
+    fun setString(offset: Int, value: String, txnum: Int, lsn: LSN) {
         modifiedBy = txnum
-        if (lsn >= 0)
+        if (lsn >= LSN.zero)
             logSequenceNumber = lsn
         contents.setString(offset, value)
     }

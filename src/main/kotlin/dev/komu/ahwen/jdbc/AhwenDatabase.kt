@@ -1,7 +1,7 @@
 package dev.komu.ahwen.jdbc
 
 import dev.komu.ahwen.buffer.BufferManager
-import dev.komu.ahwen.file.FileManager
+import dev.komu.ahwen.file.DefaultFileManager
 import dev.komu.ahwen.file.FileStats
 import dev.komu.ahwen.log.LogManager
 import dev.komu.ahwen.metadata.MetadataManager
@@ -11,7 +11,7 @@ import dev.komu.ahwen.tx.concurrency.LockTable
 import java.io.File
 
 class AhwenDatabase(dir: File) {
-    private val fileManager = FileManager(dir)
+    private val fileManager = DefaultFileManager(dir)
     private val logManager = LogManager(fileManager, "log")
     private val bufferManager = BufferManager(1000, fileManager, logManager)
     private val lockTable = LockTable()

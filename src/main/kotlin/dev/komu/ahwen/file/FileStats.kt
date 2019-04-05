@@ -2,6 +2,9 @@ package dev.komu.ahwen.file
 
 import java.util.concurrent.atomic.AtomicLong
 
+/**
+ * Statistics about block reads and writes performed by the database.
+ */
 class FileStats {
 
     private val _reads = AtomicLong(0)

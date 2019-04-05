@@ -1,77 +1,44 @@
 package dev.komu.ahwen.file
 
-import java.io.File
-import java.io.IOException
-import java.io.RandomAccessFile
 import java.nio.ByteBuffer
-import java.nio.channels.FileChannel
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 
 /**
  * Low level file management.
  *
- * The database is stored in a set of files residing in [dbDirectory]. This class
- * is responsible for block-level access to those files. Opens all the files in
- * synchronized mode to make sure that once writes have completed, all their changes
- * have really been persisted to disk.
+ * [FileManager] supports addressing data by [Block]s, assumes that the size of the blocks
+ * is [Page.BLOCK_SIZE]. E.g. if block number is `3` and block size is `4096`, then bytes
+ * are read from offset `3 * 4096` of the target file.
+ *
+ * Write operations are guaranteed to be flushed to disk before calls return.
  */
-class FileManager(private val dbDirectory: File) {
+interface FileManager {
 
-    val isNew = !dbDirectory.exists()
-    private val openFiles = mutableMapOf<String, FileChannel>()
-    private val lock = ReentrantLock()
-    val stats = FileStats()
+    /**
+     * Reads a buffer of bytes from given block, which must exist in the file.
+     */
+    fun read(block: Block, bb: ByteBuffer)
 
-    init {
-        if (!dbDirectory.exists() && !dbDirectory.mkdirs())
-            throw IOException("failed to create directory $dbDirectory")
+    /**
+     * Writes a buffer to of bytes to given block, which must exist in the file.
+     */
+    fun write(block: Block, bb: ByteBuffer)
 
-        // Clear the temporary files from previous run
-        for (file in dbDirectory.listFiles())
-            if (file.name.startsWith("temp"))
-                file.delete()
-    }
+    /**
+     * Adds a new block to given file and returns identifier for it.
+     * If the file does not exist, it will be created.
+     */
+    fun append(fileName: String, bb: ByteBuffer): Block
 
-    fun read(block: Block, bb: ByteBuffer) {
-        stats.incrementReads()
-        lock.withLock {
-            bb.clear()
-            val fc = getFile(block.filename)
-            fc.read(bb, block.number.toLong() * bb.capacity())
-        }
-    }
+    /**
+     * Returns the amount of blocks stored in the file. If the file does not exist,
+     * an empty file will be created.
+     */
+    fun size(fileName: String): Int
 
-    fun write(block: Block, bb: ByteBuffer) {
-        stats.incrementWrites()
-        lock.withLock {
-            bb.rewind()
-            val fc = getFile(block.filename)
-            fc.write(bb, block.number.toLong() * bb.capacity())
-        }
-    }
-
-    fun append(fileName: String, bb: ByteBuffer): Block {
-        lock.withLock {
-            val newBlockNum = size(fileName)
-            val block = Block(fileName, newBlockNum)
-            write(block, bb)
-            return block
-        }
-    }
-
-    fun size(fileName: String): Int {
-        lock.withLock {
-            val fc = getFile(fileName)
-            return fc.size().toInt() / Page.BLOCK_SIZE
-        }
-    }
-
-    private fun getFile(fileName: String): FileChannel =
-        openFiles.getOrPut(fileName) {
-            val dbTable = File(dbDirectory, fileName)
-            val f = RandomAccessFile(dbTable, "rws")
-            f.channel
-        }
+    /**
+     * Returns the number of last block, or `null` if the file is empty. If the file
+     * does not exist, an empty file will be created.
+     */
+    fun lastBlock(fileName: String): Int? =
+        size(fileName).takeIf { it > 0 }?.let { it - 1 }
 }
-

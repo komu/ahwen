@@ -3,11 +3,12 @@ package dev.komu.ahwen.tx.recovery
 import dev.komu.ahwen.buffer.BufferManager
 import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.log.BasicLogRecord
+import dev.komu.ahwen.log.LSN
 import dev.komu.ahwen.log.LogManager
 
 sealed class LogRecord {
 
-    abstract fun writeToLog(logManager: LogManager): Int
+    abstract fun writeToLog(logManager: LogManager): LSN
     abstract val op: Int
     abstract val txNumber: Int
     abstract fun undo(txnum: Int, bufferManager: BufferManager)
@@ -33,8 +34,8 @@ class CheckPointRecord : LogRecord() {
     override fun undo(txnum: Int, bufferManager: BufferManager) {
     }
 
-    override fun writeToLog(logManager: LogManager): Int {
-        return logManager.append(arrayOf(CHECKPOINT))
+    override fun writeToLog(logManager: LogManager): LSN {
+        return logManager.append(CHECKPOINT)
     }
 
     companion object {
@@ -53,8 +54,8 @@ class StartRecord(override val txNumber: Int) : LogRecord() {
     override fun undo(txnum: Int, bufferManager: BufferManager) {
     }
 
-    override fun writeToLog(logManager: LogManager): Int {
-        return logManager.append(arrayOf(START, txNumber))
+    override fun writeToLog(logManager: LogManager): LSN {
+        return logManager.append(START, txNumber)
     }
 
     companion object {
@@ -74,8 +75,8 @@ class CommitRecord(override val txNumber: Int) : LogRecord() {
     override fun undo(txnum: Int, bufferManager: BufferManager) {
     }
 
-    override fun writeToLog(logManager: LogManager): Int {
-        return logManager.append(arrayOf(COMMIT, txNumber))
+    override fun writeToLog(logManager: LogManager): LSN {
+        return logManager.append(COMMIT, txNumber)
     }
 
     companion object {
@@ -95,8 +96,8 @@ class RollbackRecord(override val txNumber: Int) : LogRecord() {
     override fun undo(txnum: Int, bufferManager: BufferManager) {
     }
 
-    override fun writeToLog(logManager: LogManager): Int {
-        return logManager.append(arrayOf(ROLLBACK, txNumber))
+    override fun writeToLog(logManager: LogManager): LSN {
+        return logManager.append(ROLLBACK, txNumber)
     }
 
     companion object {
@@ -118,13 +119,13 @@ class SetIntRecord(
     override val op: Int
         get() = SETINT
 
-    override fun writeToLog(logManager: LogManager): Int {
-        return logManager.append(arrayOf(SETINT, txNumber, block.filename, block.number, offset, value))
+    override fun writeToLog(logManager: LogManager): LSN {
+        return logManager.append(SETINT, txNumber, block.filename, block.number, offset, value)
     }
 
     override fun undo(txnum: Int, bufferManager: BufferManager) {
         val buffer = bufferManager.pin(block)
-        buffer.setInt(offset, value, txNumber, -1)
+        buffer.setInt(offset, value, txNumber, LSN.undefined)
         bufferManager.unpin(buffer)
     }
 
@@ -152,13 +153,13 @@ class SetStringRecord(
     override val op: Int
         get() = SETSTRING
 
-    override fun writeToLog(logManager: LogManager): Int {
-        return logManager.append(arrayOf(SETSTRING, txNumber, block.filename, block.number, offset, value))
+    override fun writeToLog(logManager: LogManager): LSN {
+        return logManager.append(SETSTRING, txNumber, block.filename, block.number, offset, value)
     }
 
     override fun undo(txnum: Int, bufferManager: BufferManager) {
         val buffer = bufferManager.pin(block)
-        buffer.setString(offset, value, txNumber, -1)
+        buffer.setString(offset, value, txNumber, LSN.undefined)
         bufferManager.unpin(buffer)
     }
 

@@ -1,65 +1,99 @@
+@file:Suppress("UsePropertyAccessSyntax")
+
 package dev.komu.ahwen.file
 
+import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
 import java.nio.ByteBuffer
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
+/**
+ * A page is [BLOCK_SIZE] worth of raw data loaded to memory.
+ *
+ * Pages will get reused: a single page will typically contain data from multiple [Block]s
+ * during its lifetime.
+ */
 class Page(private val fileManager: FileManager) {
 
     private val contents: ByteBuffer = ByteBuffer.allocateDirect(BLOCK_SIZE)
+    private val lock = ReentrantLock()
 
-    @Synchronized
     fun read(block: Block) {
-        fileManager.read(block, contents)
+        lock.withLock {
+            fileManager.read(block, contents)
+        }
     }
 
-    @Synchronized
     fun write(block: Block) {
-        fileManager.write(block, contents)
+        lock.withLock {
+            fileManager.write(block, contents)
+        }
     }
 
-    @Synchronized
     fun append(fileName: String): Block {
-        return fileManager.append(fileName, contents)
+        lock.withLock {
+            return fileManager.append(fileName, contents)
+        }
     }
 
-    @Synchronized
     fun getInt(offset: Int): Int {
-        contents.position(offset)
-        return contents.int
+        lock.withLock {
+            contents.position(offset)
+            return contents.getInt()
+        }
     }
 
-    @Synchronized
     fun setInt(offset: Int, value: Int) {
-        contents.position(offset)
-        contents.putInt(value)
+        lock.withLock {
+            contents.position(offset)
+            contents.putInt(value)
+        }
     }
 
-    @Synchronized
     fun getString(offset: Int): String {
-        assert(offset in 0..(BLOCK_SIZE - 1)) { "invalid offset: $offset" }
-        contents.position(offset)
-        val len = contents.int
-        val bytes = ByteArray(len)
+        lock.withLock {
+            contents.position(offset)
+            val len = contents.getInt()
+            val bytes = ByteArray(len)
 
-        assert(offset + len <= BLOCK_SIZE) { "invalid length: $offset+$len > $BLOCK_SIZE"}
-        contents.get(bytes)
-        return String(bytes, charset)
+            contents.get(bytes)
+            return String(bytes, charset)
+        }
     }
 
-    @Synchronized
     fun setString(offset: Int, value: String) {
-        contents.position(offset)
-        val bytes = value.toByteArray(charset)
-        contents.putInt(bytes.size)
-        contents.put(bytes)
+        lock.withLock {
+            val bytes = value.toByteArray(charset)
+
+            contents.position(offset)
+            contents.putInt(bytes.size)
+            contents.put(bytes)
+        }
     }
 
     companion object {
 
+        /**
+         * Size of blocks, ie. the size of individual I/O operations. For best performance
+         * this should correspond to the device block size of the operating system (typically 4k),
+         * but it might be interesting to make it lower for testing purposes.
+         */
         const val BLOCK_SIZE = 4096
+
+        const val INT_SIZE = Int.SIZE_BYTES
+
+        /** Character set used to store strings */
         private val charset = Charsets.UTF_8
+
         private val bytesPerChar = charset.newEncoder().maxBytesPerChar().toInt()
 
+        /**
+         * Returns the number of bytes needed to store a string of given length.
+         *
+         * Strings are represented by storing their length (32 bit integer) followed
+         * by their characters.
+         */
         fun strSize(len: Int): Int =
-            Int.SIZE_BYTES + (len * bytesPerChar)
+            INT_SIZE + (len * bytesPerChar)
     }
 }
