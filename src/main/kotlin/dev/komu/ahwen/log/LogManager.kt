@@ -6,6 +6,7 @@ import dev.komu.ahwen.file.Page
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
 import dev.komu.ahwen.file.Page.Companion.INT_SIZE
 import dev.komu.ahwen.file.Page.Companion.strSize
+import dev.komu.ahwen.tx.TxNum
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -68,7 +69,7 @@ class LogManager(
      * which can later be passed to [flush] to make sure that all records up to (and including)
      * this record are flushed to disk.
      *
-     * Note that passed in components are typed as [Any], but only [Int] and [String] values
+     * Note that passed in components are typed as [Any], but only [Int], [String] and [TxNum] values
      * are currently supported.
      */
     fun append(vararg values: Any): LSN {
@@ -116,6 +117,8 @@ class LogManager(
         when (value) {
             is String ->
                 lastPage.setString(currentPos, value)
+            is TxNum ->
+                lastPage.setInt(currentPos, value.txnum)
             is Int ->
                 lastPage.setInt(currentPos, value)
             else ->
@@ -129,7 +132,7 @@ class LogManager(
         get() = when (this) {
             is String ->
                 strSize(length)
-            is Int ->
+            is Int, is TxNum ->
                 INT_SIZE
             else ->
                 error("unexpected value $this of type $javaClass")

@@ -10,9 +10,13 @@ import dev.komu.ahwen.tx.concurrency.LockTable
 import dev.komu.ahwen.tx.recovery.RecoveryManager
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * A facade for managing transactional operations. Integrates with [RecoveryManager]
+ * and [ConcurrencyManager] to provide isolation and durability guarantees for data.
+ */
 class Transaction(logManager: LogManager, bufferManager: BufferManager, lockTable: LockTable, private val fileManager: FileManager) {
 
-    private val txnum = nextTxNum.getAndDecrement()
+    private val txnum = TxNum(nextTxNum.getAndDecrement())
     private val recoveryManager = RecoveryManager(txnum, logManager, bufferManager)
     private val concurrencyManager = ConcurrencyManager(lockTable)
     private val myBuffers = BufferList(bufferManager)

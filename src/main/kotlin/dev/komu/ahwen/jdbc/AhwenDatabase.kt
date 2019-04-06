@@ -23,6 +23,8 @@ class AhwenDatabase(dir: File) {
 
     init {
         Transaction(logManager, bufferManager, lockTable, fileManager).also { tx ->
+            tx.recover()
+
             metadataManager = MetadataManager(fileManager.isNew, tx)
             tx.commit()
         }

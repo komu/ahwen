@@ -5,38 +5,69 @@ import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.log.BasicLogRecord
 import dev.komu.ahwen.log.LSN
 import dev.komu.ahwen.log.LogManager
+import dev.komu.ahwen.tx.TxNum
 
+/**
+ * Base class for different records of the recovery log.
+ */
 sealed class LogRecord {
 
+    /**
+     * Identifier for the transaction that this change belongs to or
+     * `null` if the record is not logically related to any transaction.
+     */
+    abstract val txNumber: TxNum?
+
+    /**
+     * Serializes this record to given log-manager.
+     */
     abstract fun writeToLog(logManager: LogManager): LSN
-    abstract val op: Int
-    abstract val txNumber: Int
-    abstract fun undo(txnum: Int, bufferManager: BufferManager)
+
+    /**
+     * Undoes the changes represented by this log-record.
+     */
+    open fun undo(txnum: TxNum, bufferManager: BufferManager) {
+    }
 
     companion object {
+
         const val CHECKPOINT = 0
         const val START = 1
         const val COMMIT = 2
         const val ROLLBACK = 3
         const val SETINT = 4
         const val SETSTRING = 5
+
+        /**
+         * Parse a [LogRecord] from a [BasicLogRecord]. Dual of [writeToLog].
+         */
+        operator fun invoke(record: BasicLogRecord): LogRecord {
+            val type = record.nextInt()
+            return when (type) {
+                CHECKPOINT -> CheckPointRecord.from(record)
+                START -> StartRecord.from(record)
+                COMMIT -> CommitRecord.from(record)
+                ROLLBACK -> RollbackRecord.from(record)
+                SETINT -> SetIntRecord.from(record)
+                SETSTRING -> SetStringRecord.from(record)
+                else -> error("invalid record type: $type")
+            }
+        }
     }
 }
 
+/**
+ * Checkpoints represent a point in time where there are no running transactions and
+ * all changes have been flushed to disk. When performing recovery and undoing uncommitted
+ * changes, we can stop once we reach a checkpoint.
+ */
 class CheckPointRecord : LogRecord() {
 
-    override val op: Int
-        get() = CHECKPOINT
+    override val txNumber: TxNum?
+        get() = null
 
-    override val txNumber: Int
-        get() = -1
-
-    override fun undo(txnum: Int, bufferManager: BufferManager) {
-    }
-
-    override fun writeToLog(logManager: LogManager): LSN {
-        return logManager.append(CHECKPOINT)
-    }
+    override fun writeToLog(logManager: LogManager): LSN =
+        logManager.append(CHECKPOINT)
 
     companion object {
 
@@ -46,93 +77,80 @@ class CheckPointRecord : LogRecord() {
     }
 }
 
-class StartRecord(override val txNumber: Int) : LogRecord() {
+/**
+ * Marks the beginning of a transaction.
+ */
+class StartRecord(override val txNumber: TxNum) : LogRecord() {
 
-    override val op: Int
-        get() = START
-
-    override fun undo(txnum: Int, bufferManager: BufferManager) {
-    }
-
-    override fun writeToLog(logManager: LogManager): LSN {
-        return logManager.append(START, txNumber)
-    }
+    override fun writeToLog(logManager: LogManager): LSN =
+        logManager.append(START, txNumber)
 
     companion object {
 
         fun from(rec: BasicLogRecord): StartRecord {
-            val tx = rec.nextInt()
+            val tx = TxNum(rec.nextInt())
             return StartRecord(tx)
         }
     }
 }
 
-class CommitRecord(override val txNumber: Int) : LogRecord() {
+/**
+ * Marks a transaction as committed.
+ */
+class CommitRecord(override val txNumber: TxNum) : LogRecord() {
 
-    override val op: Int
-        get() = COMMIT
-
-    override fun undo(txnum: Int, bufferManager: BufferManager) {
-    }
-
-    override fun writeToLog(logManager: LogManager): LSN {
-        return logManager.append(COMMIT, txNumber)
-    }
+    override fun writeToLog(logManager: LogManager): LSN =
+        logManager.append(COMMIT, txNumber)
 
     companion object {
 
         fun from(rec: BasicLogRecord): CommitRecord {
-            val tx = rec.nextInt()
+            val tx = TxNum(rec.nextInt())
             return CommitRecord(tx)
         }
     }
 }
 
-class RollbackRecord(override val txNumber: Int) : LogRecord() {
+/**
+ * Marks a transaction as rolled back.
+ */
+class RollbackRecord(override val txNumber: TxNum) : LogRecord() {
 
-    override val op: Int
-        get() = ROLLBACK
-
-    override fun undo(txnum: Int, bufferManager: BufferManager) {
-    }
-
-    override fun writeToLog(logManager: LogManager): LSN {
-        return logManager.append(ROLLBACK, txNumber)
-    }
+    override fun writeToLog(logManager: LogManager): LSN =
+        logManager.append(ROLLBACK, txNumber)
 
     companion object {
 
         fun from(rec: BasicLogRecord): RollbackRecord {
-            val tx = rec.nextInt()
+            val tx = TxNum(rec.nextInt())
             return RollbackRecord(tx)
         }
     }
 }
 
+/**
+ * Undo record for changing an int.
+ */
 class SetIntRecord(
-    override val txNumber: Int,
+    override val txNumber: TxNum,
     private val block: Block,
     private val offset: Int,
-    private val value: Int
+    private val oldValue: Int
     ) : LogRecord() {
 
-    override val op: Int
-        get() = SETINT
+    override fun writeToLog(logManager: LogManager): LSN =
+        logManager.append(SETINT, txNumber, block.filename, block.number, offset, oldValue)
 
-    override fun writeToLog(logManager: LogManager): LSN {
-        return logManager.append(SETINT, txNumber, block.filename, block.number, offset, value)
-    }
-
-    override fun undo(txnum: Int, bufferManager: BufferManager) {
+    override fun undo(txnum: TxNum, bufferManager: BufferManager) {
         val buffer = bufferManager.pin(block)
-        buffer.setInt(offset, value, txNumber, LSN.undefined)
+        buffer.setInt(offset, oldValue, txnum, LSN.undefined)
         bufferManager.unpin(buffer)
     }
 
     companion object {
 
         fun from(rec: BasicLogRecord): SetIntRecord {
-            val tx = rec.nextInt()
+            val tx = TxNum(rec.nextInt())
             val filename = rec.nextString()
             val blockNum = rec.nextInt()
             val offset = rec.nextInt()
@@ -143,30 +161,29 @@ class SetIntRecord(
     }
 }
 
+/**
+ * Undo record for changing a string.
+ */
 class SetStringRecord(
-    override val txNumber: Int,
+    override val txNumber: TxNum,
     private val block: Block,
     private val offset: Int,
-    private val value: String
+    private val odValue: String
     ) : LogRecord() {
 
-    override val op: Int
-        get() = SETSTRING
+    override fun writeToLog(logManager: LogManager): LSN =
+        logManager.append(SETSTRING, txNumber, block.filename, block.number, offset, odValue)
 
-    override fun writeToLog(logManager: LogManager): LSN {
-        return logManager.append(SETSTRING, txNumber, block.filename, block.number, offset, value)
-    }
-
-    override fun undo(txnum: Int, bufferManager: BufferManager) {
+    override fun undo(txnum: TxNum, bufferManager: BufferManager) {
         val buffer = bufferManager.pin(block)
-        buffer.setString(offset, value, txNumber, LSN.undefined)
+        buffer.setString(offset, odValue, txnum, LSN.undefined)
         bufferManager.unpin(buffer)
     }
 
     companion object {
 
         fun from(rec: BasicLogRecord): SetStringRecord {
-            val tx = rec.nextInt()
+            val tx = TxNum(rec.nextInt())
             val filename = rec.nextString()
             val blockNum = rec.nextInt()
             val offset = rec.nextInt()
