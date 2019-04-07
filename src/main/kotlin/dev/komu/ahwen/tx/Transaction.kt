@@ -82,14 +82,12 @@ class Transaction(logManager: LogManager, bufferManager: BufferManager, lockTabl
     }
 
     fun size(fileName: String): Int {
-        val dummyBlock = Block(fileName, -1)
-        concurrencyManager.sLock(dummyBlock)
+        concurrencyManager.sLock(eofBlock(fileName))
         return fileManager.size(fileName)
     }
 
     fun append(fileName: String, formatter: PageFormatter): Block {
-        val dummyBlock = Block(fileName, -1)
-        concurrencyManager.xLock(dummyBlock)
+        concurrencyManager.xLock(eofBlock(fileName))
         val block = myBuffers.pinNew(fileName, formatter)
         unpin(block)
         return block
@@ -97,5 +95,11 @@ class Transaction(logManager: LogManager, bufferManager: BufferManager, lockTabl
 
     companion object {
         private val nextTxNum = AtomicInteger(0)
+
+        /**
+         * Returns a dummy block representing the end-of-file for given file. The block can't be
+         * read since it has an invalid number, but it can be locked to achieve serializable isolation.
+         */
+        private fun eofBlock(fileName: String) = Block(fileName, -1)
     }
 }
