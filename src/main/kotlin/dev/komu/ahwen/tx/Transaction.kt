@@ -13,6 +13,16 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * A facade for managing transactional operations. Integrates with [RecoveryManager]
  * and [ConcurrencyManager] to provide isolation and durability guarantees for data.
+ *
+ * Currently implements only serializable transaction level. This is because all locks
+ * are held to the end of transaction and the exclusive lock taken on [append] will
+ * prevent [size] from taking the file size if new blocks are appended.
+ *
+ * Less strict isolation levels could be achieved by:
+ *
+ * - repeatable read: don't acquire lock on [size]
+ * - read committed: don't acquire lock on [size], release shared locks before commit
+ * - read uncommitted: never acquire shared locks
  */
 class Transaction(logManager: LogManager, bufferManager: BufferManager, lockTable: LockTable, private val fileManager: FileManager) {
 
