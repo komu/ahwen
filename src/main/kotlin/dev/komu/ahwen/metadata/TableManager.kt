@@ -1,23 +1,23 @@
 package dev.komu.ahwen.metadata
 
-import dev.komu.ahwen.record.RecordFile
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.record.TableInfo
+import dev.komu.ahwen.record.forEach
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.SqlType
 
 class TableManager(isNew: Boolean, tx: Transaction) {
 
-    private val tcatInfo = TableInfo("tblcat", Schema().apply {
-        addStringField("tblname", MAX_NAME)
-        addIntField("reclength")
+    private val tcatInfo = TableInfo("tblcat", Schema {
+        stringField("tblname", MAX_NAME)
+        intField("reclength")
     })
-    private val fcatInfo = TableInfo("fldcat", Schema().apply {
-        addStringField("tblname", MAX_NAME)
-        addStringField("fldname", MAX_NAME)
-        addIntField("type")
-        addIntField("length")
-        addIntField("offset")
+    private val fcatInfo = TableInfo("fldcat", Schema {
+        stringField("tblname", MAX_NAME)
+        stringField("fldname", MAX_NAME)
+        intField("type")
+        intField("length")
+        intField("offset")
     })
 
     init {
@@ -32,54 +32,55 @@ class TableManager(isNew: Boolean, tx: Transaction) {
         val ti = TableInfo(tableName, schema)
 
         // insert one record into tblcat
-        val tcatFile = RecordFile(tcatInfo, tx)
-        tcatFile.insert()
-        tcatFile.setString("tblname", tableName)
-        tcatFile.setInt("reclength", ti.recordLength)
-        tcatFile.close()
+        tcatInfo.open(tx).use { tcatFile ->
+            tcatFile.insert()
+            tcatFile.setString("tblname", tableName)
+            tcatFile.setInt("reclength", ti.recordLength)
+        }
 
         // insert a record into fldcat for each field
-        val fcatFile = RecordFile(fcatInfo, tx)
-        for (field in schema.fields) {
-            fcatFile.insert()
-            fcatFile.setString("tblname", tableName)
-            fcatFile.setString("fldname", field)
-            fcatFile.setInt("type", schema.type(field).code)
-            fcatFile.setInt("length", schema.length(field))
-            fcatFile.setInt("offset", ti.offset(field))
+        fcatInfo.open(tx).use { fcatFile ->
+            for (field in schema.fields) {
+                fcatFile.insert()
+                fcatFile.setString("tblname", tableName)
+                fcatFile.setString("fldname", field)
+                fcatFile.setInt("type", schema.type(field).code)
+                fcatFile.setInt("length", schema.length(field))
+                fcatFile.setInt("offset", ti.offset(field))
+            }
         }
-        fcatFile.close()
     }
 
     fun getTableInfo(tableName: String, tx: Transaction): TableInfo {
-        val tcatFile = RecordFile(tcatInfo, tx)
         var recLen = -1
-        while (tcatFile.next()) {
-            if (tcatFile.getString("tblname") == tableName) {
-                recLen = tcatFile.getInt("reclength")
-                break
+        tcatInfo.open(tx).use { tcatFile ->
+            while (tcatFile.next()) {
+                if (tcatFile.getString("tblname") == tableName) {
+                    recLen = tcatFile.getInt("reclength")
+                    break
+                }
             }
         }
-        tcatFile.close()
 
         if (recLen == -1) error("could not find table $tableName")
 
-        val schema = Schema()
+        val schema = Schema.Builder()
         val offsets = mutableMapOf<String, Int>()
 
-        val fcatFile = RecordFile(fcatInfo, tx)
-        while (fcatFile.next()) {
-            if (fcatFile.getString("tblname") == tableName) {
-                val field = fcatFile.getString("fldname")
-                val type = SqlType(fcatFile.getInt("type"))
-                val length = fcatFile.getInt("length")
+        fcatInfo.open(tx).use { fcatFile ->
+            fcatFile.forEach {
+                if (fcatFile.getString("tblname") == tableName) {
+                    val field = fcatFile.getString("fldname")
+                    val type = SqlType(fcatFile.getInt("type"))
+                    val length = fcatFile.getInt("length")
 
-                offsets[field] = fcatFile.getInt("offset")
-                schema.addField(field, type, length)
+                    offsets[field] = fcatFile.getInt("offset")
+                    schema.addField(field, type, length)
+                }
             }
         }
-        fcatFile.close()
-        return TableInfo(tableName, schema, offsets, recLen)
+
+        return TableInfo(tableName, schema.build(), offsets, recLen)
     }
 
     companion object {

@@ -4,8 +4,11 @@ import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
 import dev.komu.ahwen.tx.Transaction
 
+/**
+ * A cursor for reading records described by [ti] from a block.
+ */
 class RecordPage(
-    block: Block,
+    private val block: Block,
     private val ti: TableInfo,
     private val tx: Transaction
 ) {
@@ -13,45 +16,40 @@ class RecordPage(
     private val slotSize = ti.recordLength + Int.SIZE_BYTES
     var currentId = -1
         private set
-    private var block: Block? = block
 
     init {
         tx.pin(block)
     }
 
     fun close() {
-        val blk = block
-        if (blk != null) {
-            tx.unpin(blk)
-            block = null
-        }
+        tx.unpin(block)
     }
 
     fun next() = searchFor(IN_USE)
 
     fun getInt(fieldName: String): Int =
-        tx.getInt(block!!, fieldPos(fieldName))
+        tx.getInt(block, fieldPos(fieldName))
 
     fun getString(fieldName: String): String =
-        tx.getString(block!!, fieldPos(fieldName))
+        tx.getString(block, fieldPos(fieldName))
 
     fun setInt(fieldName: String, value: Int) {
-        tx.setInt(block!!, fieldPos(fieldName), value)
+        tx.setInt(block, fieldPos(fieldName), value)
     }
 
     fun setString(fieldName: String, value: String) {
-        tx.setString(block!!, fieldPos(fieldName), value)
+        tx.setString(block, fieldPos(fieldName), value)
     }
 
     fun delete() {
-        tx.setInt(block!!, currentPos, EMPTY)
+        tx.setInt(block, currentPos, EMPTY)
     }
 
     fun insert(): Boolean {
         this.currentId = -1
         val found = searchFor(EMPTY)
         if (found)
-            tx.setInt(block!!, currentPos, IN_USE)
+            tx.setInt(block, currentPos, IN_USE)
         return found
     }
 
@@ -74,7 +72,7 @@ class RecordPage(
         currentId++
 
         while (isValidSlot) {
-            if (tx.getInt(block!!, currentPos) == flag)
+            if (tx.getInt(block, currentPos) == flag)
                 return true
             currentId++
         }

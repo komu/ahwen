@@ -14,11 +14,11 @@ class GroupByPlan(
 
     private val plan = SortPlan(plan, groupFields.toList(), tx)
 
-    override val schema = Schema().apply {
+    override val schema = Schema {
         for (field in groupFields)
-            add(field, plan.schema)
+            copyFieldFrom(field, plan.schema)
         for (fn in aggregationFns)
-            addIntField(fn.fieldName)
+            intField(fn.fieldName)
     }
 
     override fun open(): Scan =

@@ -4,10 +4,10 @@ import dev.komu.ahwen.record.Schema
 
 class ProjectPlan(private val plan: Plan, private val fields: Collection<String>) : Plan by plan {
 
-    override val schema = Schema().also { schema ->
+    override val schema = Schema {
         val sch = plan.schema
         for (field in fields)
-            schema.add(field, sch)
+            copyFieldFrom(field, sch)
     }
 
     override fun open(): Scan =

@@ -37,15 +37,15 @@ class IndexInfo(
         else
             minOf(si.distinctValues(fieldName), recordsOutput)
 
-    private fun schema() = Schema().apply {
-        addIntField("block")
-        addIntField("id")
+    private fun schema() = Schema {
+        intField("block")
+        intField("id")
         val type = ti.schema.type(fieldName)
         when (type) {
             SqlType.INTEGER ->
-                addIntField("dataval")
+                intField("dataval")
             SqlType.VARCHAR ->
-                addStringField("dataval", ti.schema.length(fieldName))
+                stringField("dataval", ti.schema.length(fieldName))
         }
     }
 

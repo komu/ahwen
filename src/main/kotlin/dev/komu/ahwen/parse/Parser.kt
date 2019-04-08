@@ -174,10 +174,10 @@ class Parser(query: String) {
     }
 
     private fun fieldDefs(): Schema {
-        val schema = fieldDef()
+        var schema = fieldDef()
         while (lex.matchDelim(',')) {
             lex.eatDelim(',')
-            schema.addAll(fieldDef())
+            schema += fieldDef()
         }
         return schema
     }
@@ -188,18 +188,20 @@ class Parser(query: String) {
     }
 
     private fun fieldType(fieldName: String): Schema {
-        val schema = Schema()
-        if (lex.matchKeyword("int")) {
+        return if (lex.matchKeyword("int")) {
             lex.eatKeyword("int")
-            schema.addIntField(fieldName)
+            Schema {
+                intField(fieldName)
+            }
         } else {
             lex.eatKeyword("varchar")
             lex.eatDelim('(')
             val len = lex.eatIntConstant()
             lex.eatDelim(')')
-            schema.addStringField(fieldName, len)
+            Schema {
+                stringField(fieldName, len)
+            }
         }
-        return schema
     }
 
     private fun createView(): CreateViewData {

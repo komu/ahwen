@@ -27,9 +27,9 @@ class BTreeIndex(
         if (tx.size(leafTi.fileName) == 0)
             tx.append(leafTi.fileName, BTreePageFormatter(leafTi, -1))
 
-        val dirSchema = Schema().apply {
-            add("block", leafSchema)
-            add("dataval", leafSchema)
+        val dirSchema = Schema {
+            copyFieldFrom("block", leafSchema)
+            copyFieldFrom("dataval", leafSchema)
         }
         dirTi = TableInfo("${indexName}dir", dirSchema)
         rootBlock = Block(dirTi.fileName, 0)

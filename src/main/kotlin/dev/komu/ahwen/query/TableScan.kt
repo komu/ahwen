@@ -1,14 +1,13 @@
 package dev.komu.ahwen.query
 
 import dev.komu.ahwen.record.RID
-import dev.komu.ahwen.record.RecordFile
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.SqlType
 
 class TableScan(ti: TableInfo, tx: Transaction) : UpdateScan {
 
-    private val rf = RecordFile(ti, tx)
+    private val rf = ti.open(tx)
     private val schema = ti.schema
 
     override fun beforeFirst() {

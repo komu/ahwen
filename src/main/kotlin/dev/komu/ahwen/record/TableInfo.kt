@@ -1,7 +1,13 @@
 package dev.komu.ahwen.record
 
+import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.SqlType
 
+/**
+ * Represents the physical layout of a table, mapping fields to their offsets.
+ *
+ * @see Schema
+ */
 class TableInfo(
     val tableName: String,
     val schema: Schema,
@@ -13,6 +19,12 @@ class TableInfo(
 
     fun offset(name: String): Int =
         offsets[name] ?: error("no field $name in $tableName")
+
+    /**
+     * Opens a cursor into this file
+     */
+    fun open(tx: Transaction) =
+        RecordFile(this, tx)
 
     companion object {
 

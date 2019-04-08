@@ -1,3 +1,6 @@
 package dev.komu.ahwen.record
 
-class RID(val blockNumber: Int, val id: Int)
+/**
+ * Identifier for locating a record.
+ */
+data class RID(val blockNumber: Int, val id: Int)

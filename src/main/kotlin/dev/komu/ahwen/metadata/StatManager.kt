@@ -1,7 +1,7 @@
 package dev.komu.ahwen.metadata
 
-import dev.komu.ahwen.record.RecordFile
 import dev.komu.ahwen.record.TableInfo
+import dev.komu.ahwen.record.forEach
 import dev.komu.ahwen.tx.Transaction
 
 class StatManager(private val tableManager: TableManager, tx: Transaction) {
@@ -31,25 +31,25 @@ class StatManager(private val tableManager: TableManager, tx: Transaction) {
         numCalls = 0
 
         val tcatInfo = tableManager.getTableInfo("tblcat", tx)
-        val tcatFile = RecordFile(tcatInfo, tx)
-        while (tcatFile.next()) {
-            val tableName = tcatFile.getString("tblname")
-            val ti = tableManager.getTableInfo(tableName, tx)
-            tableStats[tableName] = calcTableStats(ti, tx)
+        tcatInfo.open(tx).use { tcatFile ->
+            tcatFile.forEach {
+                val tableName = tcatFile.getString("tblname")
+                val ti = tableManager.getTableInfo(tableName, tx)
+                tableStats[tableName] = calcTableStats(ti, tx)
+            }
         }
-        tcatFile.close()
     }
 
     @Synchronized
     private fun calcTableStats(ti: TableInfo, tx: Transaction): StatInfo {
         var numRecords = 0
         var numBlocks = 0
-        val rf = RecordFile(ti, tx)
-        while (rf.next()) {
-            numRecords++
-            numBlocks = rf.currentRid.blockNumber + 1
+        ti.open(tx).use { rf ->
+            rf.forEach {
+                numRecords++
+                numBlocks = rf.currentRid.blockNumber + 1
+            }
         }
-        rf.close()
         return StatInfo(numBlocks, numRecords)
     }
 }

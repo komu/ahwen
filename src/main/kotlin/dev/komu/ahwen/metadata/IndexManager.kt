@@ -1,9 +1,9 @@
 package dev.komu.ahwen.metadata
 
 import dev.komu.ahwen.metadata.TableManager.Companion.MAX_NAME
-import dev.komu.ahwen.record.RecordFile
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.record.TableInfo
+import dev.komu.ahwen.record.forEach
 import dev.komu.ahwen.tx.Transaction
 
 class IndexManager(
@@ -16,10 +16,10 @@ class IndexManager(
 
     init {
         if (isNew) {
-            tableManager.createTable("idxcat", Schema().apply {
-                addStringField("indexname", MAX_NAME)
-                addStringField("tablename", MAX_NAME)
-                addStringField("fieldname", MAX_NAME)
+            tableManager.createTable("idxcat", Schema {
+                stringField("indexname", MAX_NAME)
+                stringField("tablename", MAX_NAME)
+                stringField("fieldname", MAX_NAME)
             }, tx)
         }
 
@@ -31,25 +31,25 @@ class IndexManager(
         TableManager.checkNameLength(tableName, "tableName")
         TableManager.checkNameLength(fieldName, "fieldName")
 
-        val rf = RecordFile(ti, tx)
-        rf.insert()
-        rf.setString("indexname", indexName)
-        rf.setString("tablename", tableName)
-        rf.setString("fieldname", fieldName)
-        rf.close()
+        ti.open(tx).use { rf ->
+            rf.insert()
+            rf.setString("indexname", indexName)
+            rf.setString("tablename", tableName)
+            rf.setString("fieldname", fieldName)
+        }
     }
 
     fun getIndexInfo(tableName: String, tx: Transaction): Map<String, IndexInfo> {
-        val rf = RecordFile(ti, tx)
-        val result = mutableMapOf<String, IndexInfo>()
-        while (rf.next()) {
-            if (rf.getString("tablename") == tableName) {
-                val indexName = rf.getString("indexname")
-                val fieldName = rf.getString("fieldname")
-                result[fieldName] = IndexInfo(indexName, tableName, fieldName, tx, metadataManager)
+        ti.open(tx).use { rf ->
+            val result = mutableMapOf<String, IndexInfo>()
+            rf.forEach {
+                if (rf.getString("tablename") == tableName) {
+                    val indexName = rf.getString("indexname")
+                    val fieldName = rf.getString("fieldname")
+                    result[fieldName] = IndexInfo(indexName, tableName, fieldName, tx, metadataManager)
+                }
             }
+            return result
         }
-        rf.close()
-        return result
     }
 }
