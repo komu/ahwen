@@ -1,8 +1,7 @@
-package dev.komu.ahwen.index.planner
+package dev.komu.ahwen.planner
 
 import dev.komu.ahwen.metadata.MetadataManager
 import dev.komu.ahwen.parse.*
-import dev.komu.ahwen.planner.UpdatePlanner
 import dev.komu.ahwen.query.SelectPlan
 import dev.komu.ahwen.query.TablePlan
 import dev.komu.ahwen.query.forEach

@@ -1,8 +1,6 @@
 package dev.komu.ahwen.planner
 
 import dev.komu.ahwen.buffer.BufferManager
-import dev.komu.ahwen.index.planner.IndexUpdatePlanner
-import dev.komu.ahwen.index.query.HeuristicQueryPlanner
 import dev.komu.ahwen.metadata.MetadataManager
 import dev.komu.ahwen.parse.*
 import dev.komu.ahwen.query.Plan

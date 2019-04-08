@@ -1,10 +1,8 @@
-package dev.komu.ahwen.index.query
+package dev.komu.ahwen.planner
 
 import dev.komu.ahwen.buffer.BufferManager
 import dev.komu.ahwen.metadata.MetadataManager
 import dev.komu.ahwen.parse.QueryData
-import dev.komu.ahwen.planner.QueryPlanner
-import dev.komu.ahwen.planner.TablePlanner
 import dev.komu.ahwen.query.Plan
 import dev.komu.ahwen.query.ProjectPlan
 import dev.komu.ahwen.tx.Transaction
@@ -15,6 +13,7 @@ class HeuristicQueryPlanner(
 ) : QueryPlanner {
 
     override fun createPlan(data: QueryData, tx: Transaction): Plan {
+        // TODO: support views
         val tablePlanners = mutableListOf<TablePlanner>()
 
         for (tblname in data.tables)
