@@ -1,4 +1,4 @@
-package dev.komu.ahwen.materialize
+package dev.komu.ahwen.query.materialize
 
 import dev.komu.ahwen.query.Plan
 import dev.komu.ahwen.query.Scan

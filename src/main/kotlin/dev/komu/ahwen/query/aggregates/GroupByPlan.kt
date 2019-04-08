@@ -1,7 +1,8 @@
-package dev.komu.ahwen.materialize
+package dev.komu.ahwen.query.aggregates
 
 import dev.komu.ahwen.query.Plan
 import dev.komu.ahwen.query.Scan
+import dev.komu.ahwen.query.materialize.SortPlan
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.tx.Transaction
 

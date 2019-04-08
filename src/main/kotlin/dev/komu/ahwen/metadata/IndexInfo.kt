@@ -7,6 +7,12 @@ import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.SqlType
 
+/**
+ * Describes an index.
+ *
+ * Contains statistics about the index to guide planning decision. Also contains metadata
+ * about the structure of the index so that it can be opened for scanning.
+ */
 class IndexInfo(
     private val indexName: String,
     tableName: String,
@@ -21,6 +27,9 @@ class IndexInfo(
     fun open(): Index =
         BTreeIndex(indexName, schema(), tx)
 
+    /**
+     * Estimate how many blocks must be accessed to perform a load from index.
+     */
     val blocksAccessed: Int
         get() {
             val rpb = BLOCK_SIZE / ti.recordLength
@@ -28,9 +37,15 @@ class IndexInfo(
             return BTreeIndex.searchCost(blockCount, rpb)
         }
 
+    /**
+     * Estimate how many rows the output of index query will return.
+     */
     val recordsOutput: Int
         get() = si.numRecords / si.distinctValues(fieldName)
 
+    /**
+     * Estimate how many distinct values index has for given field.
+     */
     fun distinctValues(fieldName: String): Int =
         if (fieldName == this.fieldName)
             1

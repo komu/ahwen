@@ -1,11 +1,8 @@
-package dev.komu.ahwen.multibuffer
+package dev.komu.ahwen.query
 
 import dev.komu.ahwen.buffer.BufferManager
-import dev.komu.ahwen.materialize.MaterializePlan
-import dev.komu.ahwen.materialize.TempTable
-import dev.komu.ahwen.query.Plan
-import dev.komu.ahwen.query.Scan
-import dev.komu.ahwen.query.copyFrom
+import dev.komu.ahwen.query.materialize.MaterializePlan
+import dev.komu.ahwen.query.materialize.TempTable
 import dev.komu.ahwen.tx.Transaction
 
 class MultiBufferProductPlan(

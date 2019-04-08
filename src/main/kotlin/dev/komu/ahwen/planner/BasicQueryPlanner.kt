@@ -2,7 +2,6 @@ package dev.komu.ahwen.planner
 
 import dev.komu.ahwen.buffer.BufferManager
 import dev.komu.ahwen.metadata.MetadataManager
-import dev.komu.ahwen.multibuffer.MultiBufferProductPlan
 import dev.komu.ahwen.parse.QueryData
 import dev.komu.ahwen.query.*
 import dev.komu.ahwen.tx.Transaction
@@ -21,7 +20,14 @@ class BasicQueryPlanner(
                 TablePlan(tableName, metadataManager, tx)
         }
 
-        val product = plans.reduce { lhs, rhs -> MultiBufferProductPlan(lhs, rhs, tx, bufferManager) }
+        val product = plans.reduce { lhs, rhs ->
+            MultiBufferProductPlan(
+                lhs,
+                rhs,
+                tx,
+                bufferManager
+            )
+        }
         val select = SelectPlan(product, data.predicate)
         return ProjectPlan(select, data.fields)
     }

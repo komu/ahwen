@@ -1,4 +1,4 @@
-package dev.komu.ahwen.materialize
+package dev.komu.ahwen.query.materialize
 
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
 import dev.komu.ahwen.query.Plan

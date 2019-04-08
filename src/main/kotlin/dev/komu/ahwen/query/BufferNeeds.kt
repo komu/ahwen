@@ -1,4 +1,4 @@
-package dev.komu.ahwen.multibuffer
+package dev.komu.ahwen.query
 
 import kotlin.math.ceil
 import kotlin.math.pow

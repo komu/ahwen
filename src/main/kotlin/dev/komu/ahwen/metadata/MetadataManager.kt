@@ -1,11 +1,12 @@
 package dev.komu.ahwen.metadata
 
-import dev.komu.ahwen.metadata.TableManager.Companion.MAX_NAME
-import dev.komu.ahwen.metadata.TableManager.Companion.checkNameLength
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction
 
+/**
+ * A facade to database metadata.
+ */
 class MetadataManager(isNew: Boolean, tx: Transaction) {
 
     private val tableManager = TableManager(isNew, tx)

@@ -1,10 +1,6 @@
-package dev.komu.ahwen.multibuffer
+package dev.komu.ahwen.query
 
 import dev.komu.ahwen.file.Block
-import dev.komu.ahwen.query.Constant
-import dev.komu.ahwen.query.IntConstant
-import dev.komu.ahwen.query.Scan
-import dev.komu.ahwen.query.StringConstant
 import dev.komu.ahwen.record.RecordPage
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction

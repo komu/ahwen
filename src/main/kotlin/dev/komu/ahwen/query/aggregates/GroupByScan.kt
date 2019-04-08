@@ -1,4 +1,4 @@
-package dev.komu.ahwen.materialize
+package dev.komu.ahwen.query.aggregates
 
 import dev.komu.ahwen.query.Constant
 import dev.komu.ahwen.query.Scan

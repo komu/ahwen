@@ -1,8 +1,5 @@
-package dev.komu.ahwen.multibuffer
+package dev.komu.ahwen.query
 
-import dev.komu.ahwen.query.Constant
-import dev.komu.ahwen.query.ProductScan
-import dev.komu.ahwen.query.Scan
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction
 
