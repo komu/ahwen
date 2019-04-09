@@ -5,7 +5,8 @@ import dev.komu.ahwen.record.RecordPage
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.ColumnName
-import dev.komu.ahwen.types.SqlType
+import dev.komu.ahwen.types.SqlType.INTEGER
+import dev.komu.ahwen.types.SqlType.VARCHAR
 
 class ChunkScan(
     ti: TableInfo,
@@ -40,12 +41,9 @@ class ChunkScan(
         }
     }
 
-    override fun get(column: ColumnName): Constant {
-        val type = schema.type(column)
-        return when (type) {
-            SqlType.INTEGER -> IntConstant(rp.getInt(column))
-            SqlType.VARCHAR -> StringConstant(rp.getString(column))
-        }
+    override fun get(column: ColumnName): Constant = when (schema.type(column)) {
+        INTEGER -> IntConstant(rp.getInt(column))
+        VARCHAR -> StringConstant(rp.getString(column))
     }
 
     override fun contains(column: ColumnName): Boolean =

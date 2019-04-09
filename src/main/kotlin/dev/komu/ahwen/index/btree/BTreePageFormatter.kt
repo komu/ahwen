@@ -25,9 +25,9 @@ class BTreePageFormatter(
     }
 
     private fun makeDefaultRecord(page: Page, pos: Int) {
-        for (fieldName in ti.schema.fields) {
-            val offset = ti.offset(fieldName)
-            val type = ti.schema.type(fieldName)
+        for (column in ti.schema.columns) {
+            val offset = ti.offset(column)
+            val type = ti.schema.type(column)
             when (type) {
                 SqlType.INTEGER -> page.setInt(pos + offset, 0)
                 SqlType.VARCHAR -> page.setString(pos + offset, "")

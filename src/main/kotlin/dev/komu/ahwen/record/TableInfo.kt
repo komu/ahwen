@@ -8,7 +8,7 @@ import dev.komu.ahwen.types.SqlType.VARCHAR
 import dev.komu.ahwen.types.TableName
 
 /**
- * Represents the physical layout of a table, mapping fields to their offsets.
+ * Represents the physical layout of a table, mapping columns to their offsets.
  *
  * @see Schema
  */
@@ -34,17 +34,20 @@ class TableInfo(
         operator fun invoke(tableName: TableName, schema: Schema): TableInfo {
             val offsets = mutableMapOf<ColumnName, Int>()
             var pos = 0
-            for (fieldName in schema.fields) {
-                offsets[fieldName] = pos
-                pos += schema.lengthInBytes(fieldName)
+            for (column in schema.columns) {
+                offsets[column] = pos
+                pos += schema.lengthInBytes(column)
             }
 
             return TableInfo(tableName, schema, offsets, pos)
         }
 
-        private fun Schema.lengthInBytes(fieldName: ColumnName): Int = when (type(fieldName)) {
-            INTEGER -> Int.SIZE_BYTES
-            VARCHAR -> Int.SIZE_BYTES + length(fieldName)
+        private fun Schema.lengthInBytes(column: ColumnName): Int {
+            val info = this[column]
+            return when (info.type) {
+                INTEGER -> Int.SIZE_BYTES
+                VARCHAR -> Int.SIZE_BYTES + info.length
+            }
         }
     }
 }

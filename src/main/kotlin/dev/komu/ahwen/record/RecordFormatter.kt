@@ -22,9 +22,9 @@ class RecordFormatter(private val ti: TableInfo) : PageFormatter {
     }
 
     private fun makeDefaultRecord(page: Page, pos: Int) {
-        for (field in ti.schema.fields) {
-            val offset = ti.offset(field)
-            val type = ti.schema.type(field)
+        for (column in ti.schema.columns) {
+            val offset = ti.offset(column)
+            val type = ti.schema.type(column)
             val position = pos + Int.SIZE_BYTES + offset
             when (type) {
                 SqlType.INTEGER ->

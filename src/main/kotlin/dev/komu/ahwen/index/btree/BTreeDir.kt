@@ -29,7 +29,7 @@ class BTreeDir(
     }
 
     fun makeNewRoot(e: DirEntry) {
-        val firstVal = contents.getDataVal(0)
+        val firstVal = contents.getDataValue(0)
         val level = contents.flag
         val newBlock = contents.split(0, level)
         val oldRoot = DirEntry(firstVal, newBlock.number)
@@ -57,7 +57,7 @@ class BTreeDir(
 
         val level = contents.flag
         val splitPos = contents.numRecs / 2
-        val splitVal = contents.getDataVal(splitPos)
+        val splitVal = contents.getDataValue(splitPos)
         val newBlock = contents.split(splitPos, level)
 
         return DirEntry(splitVal, newBlock.number)
@@ -65,7 +65,7 @@ class BTreeDir(
 
     private fun findChildBlock(searchKey: Constant): Block {
         var slot = contents.findSlotBefore(searchKey)
-        if (contents.getDataVal(slot + 1) == searchKey)
+        if (contents.getDataValue(slot + 1) == searchKey)
             slot++
         val blockNum = contents.getChildNum(slot)
         return Block(fileName, blockNum)

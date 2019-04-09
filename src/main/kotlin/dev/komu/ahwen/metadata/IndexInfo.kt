@@ -59,12 +59,12 @@ class IndexInfo(
     private fun schema() = Schema {
         intField(BTreePage.COL_BLOCK)
         intField(BTreePage.COL_ID)
-        val type = ti.schema.type(fieldName)
-        when (type) {
+        val info = ti.schema[fieldName]
+        when (info.type) {
             SqlType.INTEGER ->
                 intField(BTreePage.COL_DATAVAL)
             SqlType.VARCHAR ->
-                stringField(BTreePage.COL_DATAVAL, ti.schema.length(fieldName))
+                stringField(BTreePage.COL_DATAVAL, info.length)
         }
     }
 

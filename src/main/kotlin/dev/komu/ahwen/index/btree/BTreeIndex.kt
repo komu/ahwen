@@ -3,14 +3,11 @@ package dev.komu.ahwen.index.btree
 import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.index.Index
 import dev.komu.ahwen.query.Constant
-import dev.komu.ahwen.query.IntConstant
-import dev.komu.ahwen.query.StringConstant
 import dev.komu.ahwen.record.RID
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.IndexName
-import dev.komu.ahwen.types.SqlType
 import dev.komu.ahwen.types.TableName
 import kotlin.math.ln
 
@@ -41,11 +38,7 @@ class BTreeIndex(
         val page = BTreePage(rootBlock, dirTi, tx)
         if (page.numRecs == 0) {
             val fieldType = dirSchema.type(BTreePage.COL_DATAVAL)
-            val minValue = when (fieldType) {
-                SqlType.INTEGER -> IntConstant(Int.MIN_VALUE)
-                SqlType.VARCHAR -> StringConstant("")
-            }
-            page.insertDir(0, minValue, 0)
+            page.insertDir(0, fieldType.minimumValue, 0)
         }
         page.close()
     }

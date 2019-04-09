@@ -12,25 +12,22 @@ import dev.komu.ahwen.types.SqlType.VARCHAR
  */
 class Schema private constructor(private val info: Map<ColumnName, FieldInfo>) {
 
-    val fields: Collection<ColumnName>
+    val columns: Collection<ColumnName>
         get() = info.keys
 
     operator fun contains(name: ColumnName) =
         name in info
 
     fun type(name: ColumnName) =
-        lookup(name).type
-
-    fun length(name: ColumnName) =
-        lookup(name).length
+        get(name).type
 
     operator fun plus(rhs: Schema): Schema =
         Schema(info + rhs.info)
 
-    private fun lookup(name: ColumnName) =
+    operator fun get(name: ColumnName) =
         info[name] ?: error("no field $name")
 
-    private class FieldInfo(val type: SqlType, val length: Int)
+    class FieldInfo(val type: SqlType, val length: Int)
 
     companion object {
 
@@ -55,7 +52,7 @@ class Schema private constructor(private val info: Map<ColumnName, FieldInfo>) {
         }
 
         fun copyFieldFrom(name: ColumnName, schema: Schema) {
-            val info = schema.lookup(name)
+            val info = schema.get(name)
 
             addField(name, info.type, info.length)
         }

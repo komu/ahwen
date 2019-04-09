@@ -46,13 +46,14 @@ class TableManager(isNew: Boolean, tx: Transaction) {
 
         // insert a record into fldcat for each field
         fieldCatalogInfo.open(tx).use { fcat ->
-            for (field in schema.fields) {
+            for (column in schema.columns) {
+                val info = schema[column]
                 fcat.insert()
                 fcat.setString(COL_TABLE_NAME, tableName.value)
-                fcat.setString(COL_FIELD_NAME, field.value)
-                fcat.setInt(COL_TYPE, schema.type(field).code)
-                fcat.setInt(COL_LENGTH, schema.length(field))
-                fcat.setInt(COL_OFFSET, ti.offset(field))
+                fcat.setString(COL_FIELD_NAME, column.value)
+                fcat.setInt(COL_TYPE, info.type.code)
+                fcat.setInt(COL_LENGTH, info.length)
+                fcat.setInt(COL_OFFSET, ti.offset(column))
             }
         }
     }

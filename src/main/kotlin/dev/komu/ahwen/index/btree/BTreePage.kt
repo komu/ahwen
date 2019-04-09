@@ -26,7 +26,7 @@ class BTreePage(
 
     fun findSlotBefore(searchKey: Constant): Int {
         var slot = 0
-        while (slot < numRecs && getDataVal(slot) < searchKey)
+        while (slot < numRecs && getDataValue(slot) < searchKey)
             slot++
         return slot - 1
     }
@@ -50,8 +50,8 @@ class BTreePage(
         return newBlock
     }
 
-    fun getDataVal(slot: Int): Constant =
-        getVal(slot, COL_DATAVAL)
+    fun getDataValue(slot: Int): Constant =
+        getValue(slot, COL_DATAVAL)
 
     var flag: Int
         get() = tx.getInt(currentBlock!!, 0)
@@ -59,7 +59,7 @@ class BTreePage(
             tx.setInt(currentBlock!!, 0, value)
         }
 
-    fun appendNew(flag: Int): Block =
+    private fun appendNew(flag: Int): Block =
         tx.append(ti.fileName, BTreePageFormatter(ti, flag))
 
     var numRecs: Int
@@ -75,7 +75,7 @@ class BTreePage(
 
     fun insertDir(slot: Int, value: Constant, blknum: Int) {
         insert(slot)
-        setVal(slot, COL_DATAVAL, value)
+        setValue(slot, COL_DATAVAL, value)
         setInt(slot, COL_BLOCK, blknum)
     }
 
@@ -86,7 +86,7 @@ class BTreePage(
 
     fun insertLeaf(slot: Int, value: Constant, rid: RID) {
         insert(slot)
-        setVal(slot, COL_DATAVAL, value)
+        setValue(slot, COL_DATAVAL, value)
         setInt(slot, COL_BLOCK, rid.blockNumber)
         setInt(slot, COL_ID, rid.id)
     }
@@ -109,7 +109,7 @@ class BTreePage(
         return tx.getString(currentBlock!!, pos)
     }
 
-    private fun getVal(slot: Int, fieldName: ColumnName): Constant {
+    private fun getValue(slot: Int, fieldName: ColumnName): Constant {
         val type = ti.schema.type(fieldName)
         return when (type) {
             SqlType.INTEGER -> IntConstant(getInt(slot, fieldName))
@@ -127,9 +127,8 @@ class BTreePage(
         tx.setString(currentBlock!!, pos, value)
     }
 
-    private fun setVal(slot: Int, fieldName: ColumnName, value: Constant) {
-        val type = ti.schema.type(fieldName)
-        when (type) {
+    private fun setValue(slot: Int, fieldName: ColumnName, value: Constant) {
+        when (ti.schema.type(fieldName)) {
             SqlType.INTEGER -> setInt(slot, fieldName, value.value as Int)
             SqlType.VARCHAR -> setString(slot, fieldName, value.value as String)
         }
@@ -146,8 +145,8 @@ class BTreePage(
 
     private fun copyRecord(from: Int, to: Int) {
         val schema = ti.schema
-        for (field in schema.fields)
-            setVal(to, field, getVal(from, field))
+        for (column in schema.columns)
+            setValue(to, column, getValue(from, column))
     }
 
     private fun transferRecords(slot: Int, dest: BTreePage) {
@@ -155,8 +154,8 @@ class BTreePage(
         var destSlot = 0
         while (slot < numRecs) {
             dest.insert(destSlot)
-            for (fieldName in schema.fields)
-                dest.setVal(destSlot, fieldName, getVal(slot, fieldName))
+            for (column in schema.columns)
+                dest.setValue(destSlot, column, getValue(slot, column))
             delete(slot)
             destSlot++
         }

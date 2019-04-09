@@ -57,6 +57,6 @@ fun UpdateScan.copyFrom(sourceScan: Scan, schema: Schema) {
  */
 fun UpdateScan.insertRowFrom(source: Scan, schema: Schema) {
     insert()
-    for (field in schema.fields)
-        this[field] = source[field]
+    for (column in schema.columns)
+        this[column] = source[column]
 }
