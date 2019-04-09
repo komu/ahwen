@@ -5,6 +5,8 @@ import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.log.BasicLogRecord
 import dev.komu.ahwen.log.LSN
 import dev.komu.ahwen.log.LogManager
+import dev.komu.ahwen.query.IntConstant
+import dev.komu.ahwen.query.StringConstant
 import dev.komu.ahwen.tx.TxNum
 import dev.komu.ahwen.types.FileName
 
@@ -144,7 +146,7 @@ class SetIntRecord(
 
     override fun undo(txnum: TxNum, bufferManager: BufferManager) {
         val buffer = bufferManager.pin(block)
-        buffer.setInt(offset, oldValue, txnum, LSN.undefined)
+        buffer.setValue(offset, IntConstant(oldValue), txnum, LSN.undefined)
         bufferManager.unpin(buffer)
     }
 
@@ -177,7 +179,7 @@ class SetStringRecord(
 
     override fun undo(txnum: TxNum, bufferManager: BufferManager) {
         val buffer = bufferManager.pin(block)
-        buffer.setString(offset, odValue, txnum, LSN.undefined)
+        buffer.setValue(offset, StringConstant(odValue), txnum, LSN.undefined)
         bufferManager.unpin(buffer)
     }
 

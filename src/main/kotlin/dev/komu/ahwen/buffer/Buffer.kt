@@ -5,6 +5,7 @@ import dev.komu.ahwen.file.FileManager
 import dev.komu.ahwen.file.Page
 import dev.komu.ahwen.log.LSN
 import dev.komu.ahwen.log.LogManager
+import dev.komu.ahwen.query.Constant
 import dev.komu.ahwen.tx.TxNum
 import dev.komu.ahwen.types.FileName
 
@@ -45,18 +46,12 @@ class Buffer(fileManager: FileManager, private val logManager: LogManager) {
     fun getString(offset: Int): String =
         contents.getString(offset)
 
-    fun setInt(offset: Int, value: Int, txnum: TxNum, lsn: LSN) {
+    fun setValue(offset: Int, value: Constant, txnum: TxNum, lsn: LSN) {
         modifiedBy = txnum
         if (lsn >= LSN.zero)
             logSequenceNumber = lsn
-        contents.setInt(offset, value)
-    }
 
-    fun setString(offset: Int, value: String, txnum: TxNum, lsn: LSN) {
-        modifiedBy = txnum
-        if (lsn >= LSN.zero)
-            logSequenceNumber = lsn
-        contents.setString(offset, value)
+        contents[offset] = value
     }
 
     fun flush() {

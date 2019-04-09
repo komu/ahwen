@@ -4,7 +4,6 @@ import dev.komu.ahwen.buffer.PageFormatter
 import dev.komu.ahwen.file.Page
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
 import dev.komu.ahwen.record.TableInfo
-import dev.komu.ahwen.types.SqlType
 
 class BTreePageFormatter(
     private val ti: TableInfo,
@@ -28,10 +27,7 @@ class BTreePageFormatter(
         for (column in ti.schema.columns) {
             val offset = ti.offset(column)
             val type = ti.schema.type(column)
-            when (type) {
-                SqlType.INTEGER -> page.setInt(pos + offset, 0)
-                SqlType.VARCHAR -> page.setString(pos + offset, "")
-            }
+            page[pos + offset] = type.defaultValue
         }
     }
 }

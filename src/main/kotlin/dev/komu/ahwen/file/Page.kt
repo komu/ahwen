@@ -3,6 +3,9 @@
 package dev.komu.ahwen.file
 
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
+import dev.komu.ahwen.query.Constant
+import dev.komu.ahwen.query.IntConstant
+import dev.komu.ahwen.query.StringConstant
 import dev.komu.ahwen.types.FileName
 import java.nio.ByteBuffer
 import java.util.concurrent.locks.ReentrantLock
@@ -41,6 +44,15 @@ class Page(private val fileManager: FileManager) {
         lock.withLock {
             contents.position(offset)
             return contents.getInt()
+        }
+    }
+
+    operator fun set(offset: Int, value: Constant) {
+        lock.withLock {
+            when (value) {
+                is IntConstant -> setInt(offset, value.value)
+                is StringConstant -> setString(offset, value.value)
+            }
         }
     }
 

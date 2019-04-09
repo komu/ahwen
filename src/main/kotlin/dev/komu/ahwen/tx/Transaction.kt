@@ -5,6 +5,8 @@ import dev.komu.ahwen.buffer.PageFormatter
 import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.file.FileManager
 import dev.komu.ahwen.log.LogManager
+import dev.komu.ahwen.query.IntConstant
+import dev.komu.ahwen.query.StringConstant
 import dev.komu.ahwen.tx.concurrency.ConcurrencyManager
 import dev.komu.ahwen.tx.concurrency.LockTable
 import dev.komu.ahwen.tx.recovery.RecoveryManager
@@ -72,14 +74,14 @@ class Transaction(logManager: LogManager, bufferManager: BufferManager, lockTabl
         concurrencyManager.xLock(block)
         val buffer = myBuffers.getBuffer(block)
         val lsn = recoveryManager.setInt(buffer, offset, value)
-        buffer.setInt(offset, value, txnum, lsn)
+        buffer.setValue(offset, IntConstant(value), txnum, lsn)
     }
 
     fun setString(block: Block, offset: Int, value: String) {
         concurrencyManager.xLock(block)
         val buffer = myBuffers.getBuffer(block)
         val lsn = recoveryManager.setString(buffer, offset, value)
-        buffer.setString(offset, value, txnum, lsn)
+        buffer.setValue(offset, StringConstant(value), txnum, lsn)
     }
 
     fun size(fileName: FileName): Int {

@@ -9,6 +9,12 @@ enum class SqlType(val code: Int) {
     INTEGER(Types.INTEGER),
     VARCHAR(Types.VARCHAR);
 
+    val defaultValue: Constant
+        get() = when (this) {
+            INTEGER -> IntConstant(0)
+            VARCHAR -> StringConstant("")
+        }
+
     val minimumValue: Constant
         get() = when (this) {
             INTEGER -> IntConstant(Int.MIN_VALUE)
