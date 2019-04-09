@@ -3,10 +3,11 @@ package dev.komu.ahwen.query.aggregates
 import dev.komu.ahwen.query.Constant
 import dev.komu.ahwen.query.IntConstant
 import dev.komu.ahwen.query.Scan
+import dev.komu.ahwen.types.ColumnName
 
-class CountFn(fieldName: String) : AggregationFn {
+class CountFn(column: ColumnName) : AggregationFn {
 
-    override val fieldName = "countof$fieldName"
+    override val fieldName = ColumnName("countof$column")
 
     private var count = 0
 

@@ -6,6 +6,7 @@ import dev.komu.ahwen.log.BasicLogRecord
 import dev.komu.ahwen.log.LSN
 import dev.komu.ahwen.log.LogManager
 import dev.komu.ahwen.tx.TxNum
+import dev.komu.ahwen.types.FileName
 
 /**
  * Base class for different records of the recovery log.
@@ -151,7 +152,7 @@ class SetIntRecord(
 
         fun from(rec: BasicLogRecord): SetIntRecord {
             val tx = TxNum(rec.nextInt())
-            val filename = rec.nextString()
+            val filename = FileName(rec.nextString())
             val blockNum = rec.nextInt()
             val offset = rec.nextInt()
             val value = rec.nextInt()
@@ -184,7 +185,7 @@ class SetStringRecord(
 
         fun from(rec: BasicLogRecord): SetStringRecord {
             val tx = TxNum(rec.nextInt())
-            val filename = rec.nextString()
+            val filename = FileName(rec.nextString())
             val blockNum = rec.nextInt()
             val offset = rec.nextInt()
             val value = rec.nextString()

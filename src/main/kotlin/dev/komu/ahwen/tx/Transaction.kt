@@ -8,6 +8,7 @@ import dev.komu.ahwen.log.LogManager
 import dev.komu.ahwen.tx.concurrency.ConcurrencyManager
 import dev.komu.ahwen.tx.concurrency.LockTable
 import dev.komu.ahwen.tx.recovery.RecoveryManager
+import dev.komu.ahwen.types.FileName
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -81,12 +82,12 @@ class Transaction(logManager: LogManager, bufferManager: BufferManager, lockTabl
         buffer.setString(offset, value, txnum, lsn)
     }
 
-    fun size(fileName: String): Int {
+    fun size(fileName: FileName): Int {
         concurrencyManager.sLock(eofBlock(fileName))
         return fileManager.size(fileName)
     }
 
-    fun append(fileName: String, formatter: PageFormatter): Block {
+    fun append(fileName: FileName, formatter: PageFormatter): Block {
         concurrencyManager.xLock(eofBlock(fileName))
         val block = myBuffers.pinNew(fileName, formatter)
         unpin(block)
@@ -100,6 +101,6 @@ class Transaction(logManager: LogManager, bufferManager: BufferManager, lockTabl
          * Returns a dummy block representing the end-of-file for given file. The block can't be
          * read since it has an invalid number, but it can be locked to achieve serializable isolation.
          */
-        private fun eofBlock(fileName: String) = Block(fileName, -1)
+        private fun eofBlock(fileName: FileName) = Block(fileName, -1)
     }
 }

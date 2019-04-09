@@ -1,5 +1,7 @@
 package dev.komu.ahwen.query
 
+import dev.komu.ahwen.types.ColumnName
+
 class SelectPlan(private val plan: Plan, private val predicate: Predicate) : Plan by plan {
 
     override fun open(): UpdateScan =
@@ -8,11 +10,11 @@ class SelectPlan(private val plan: Plan, private val predicate: Predicate) : Pla
     override val recordsOutput: Int
         get() = plan.recordsOutput / predicate.reductionFactor(plan)
 
-    override fun distinctValues(fieldName: String): Int =
-        if (predicate.equatesWithConstant(fieldName) != null)
+    override fun distinctValues(column: ColumnName): Int =
+        if (predicate.equatesWithConstant(column) != null)
             1
         else
-            minOf(plan.distinctValues(fieldName), recordsOutput)
+            minOf(plan.distinctValues(column), recordsOutput)
 
     override fun toString() =
         "[SelectPlan plan=$plan, predicate=$predicate]"

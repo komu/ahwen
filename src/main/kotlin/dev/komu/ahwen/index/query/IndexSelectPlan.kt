@@ -6,6 +6,7 @@ import dev.komu.ahwen.query.Plan
 import dev.komu.ahwen.query.Scan
 import dev.komu.ahwen.query.TablePlan
 import dev.komu.ahwen.record.Schema
+import dev.komu.ahwen.types.ColumnName
 
 class IndexSelectPlan(
     private val plan: TablePlan,
@@ -22,8 +23,8 @@ class IndexSelectPlan(
     override val recordsOutput: Int
         get() = indexInfo.recordsOutput
 
-    override fun distinctValues(fieldName: String): Int =
-        indexInfo.distinctValues(fieldName)
+    override fun distinctValues(column: ColumnName): Int =
+        indexInfo.distinctValues(column)
 
     override val schema: Schema
         get() = plan.schema

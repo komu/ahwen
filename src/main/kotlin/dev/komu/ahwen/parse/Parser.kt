@@ -2,6 +2,9 @@ package dev.komu.ahwen.parse
 
 import dev.komu.ahwen.query.*
 import dev.komu.ahwen.record.Schema
+import dev.komu.ahwen.types.ColumnName
+import dev.komu.ahwen.types.IndexName
+import dev.komu.ahwen.types.TableName
 
 class Parser(query: String) {
 
@@ -9,8 +12,14 @@ class Parser(query: String) {
 
     private val lex = Lexer(query)
 
-    fun field(): String =
-        lex.eatId()
+    private fun field(): ColumnName =
+        ColumnName(lex.eatId())
+
+    private fun tableName(): TableName =
+        TableName(lex.eatId())
+
+    private fun indexName(): IndexName =
+        IndexName(lex.eatId())
 
     fun constant(): Constant =
         if (lex.matchStringConstant())
@@ -18,20 +27,20 @@ class Parser(query: String) {
         else
             IntConstant(lex.eatIntConstant())
 
-    fun expression(): Expression =
+    private fun expression(): Expression =
         if (lex.matchId())
-            FieldNameExpression(lex.eatId())
+            FieldNameExpression(ColumnName(lex.eatId()))
         else
             ConstantExpression(constant())
 
-    fun term(): Term {
+    private fun term(): Term {
         val lhs = expression()
         lex.eatDelim('=')
         val rhs = expression()
         return Term(lhs, rhs)
     }
 
-    fun predicate(): Predicate {
+    private fun predicate(): Predicate {
         val pred = Predicate(term())
         if (lex.matchKeyword("and")) {
             lex.eatKeyword("and")
@@ -57,8 +66,8 @@ class Parser(query: String) {
         return QueryData(fields, tables, predicate)
     }
 
-    private fun selectList(): List<String> {
-        val result = mutableListOf<String>()
+    private fun selectList(): List<ColumnName> {
+        val result = mutableListOf<ColumnName>()
         result += field()
         while (lex.matchDelim(',')) {
             lex.eatDelim(',')
@@ -67,12 +76,12 @@ class Parser(query: String) {
         return result
     }
 
-    private fun tableList(): List<String> {
-        val result = mutableListOf<String>()
-        result += lex.eatId()
+    private fun tableList(): List<TableName> {
+        val result = mutableListOf<TableName>()
+        result += tableName()
         while (lex.matchDelim(',')) {
             lex.eatDelim(',')
-            result += lex.eatId()
+            result += tableName()
         }
         return result
     }
@@ -101,7 +110,7 @@ class Parser(query: String) {
     fun delete(): DeleteData {
         lex.eatKeyword("delete")
         lex.eatKeyword("from")
-        val table = lex.eatId()
+        val table = tableName()
         val predicate = if (lex.matchKeyword("where")) {
             lex.eatKeyword("where")
             predicate()
@@ -114,7 +123,7 @@ class Parser(query: String) {
     fun insert(): InsertData {
         lex.eatKeyword("insert")
         lex.eatKeyword("into")
-        val table = lex.eatId()
+        val table = tableName()
         lex.eatDelim('(')
         val fields = fieldList()
         lex.eatDelim(')')
@@ -126,8 +135,8 @@ class Parser(query: String) {
         return InsertData(table, fields, values)
     }
 
-    private fun fieldList(): List<String> {
-        val fields = mutableListOf<String>()
+    private fun fieldList(): List<ColumnName> {
+        val fields = mutableListOf<ColumnName>()
         fields += field()
         while (lex.matchDelim(',')) {
             lex.eatDelim(',')
@@ -148,7 +157,7 @@ class Parser(query: String) {
 
     fun modify(): ModifyData {
         lex.eatKeyword("update")
-        val table = lex.eatId()
+        val table = tableName()
         lex.eatKeyword("set")
         val field = field()
         lex.eatDelim('=')
@@ -166,7 +175,7 @@ class Parser(query: String) {
 
     private fun createTable(): CreateTableData {
         lex.eatKeyword("table")
-        val name = lex.eatId()
+        val name = tableName()
         lex.eatDelim('(')
         val schema = fieldDefs()
         lex.eatDelim(')')
@@ -187,7 +196,7 @@ class Parser(query: String) {
         return fieldType(fieldName)
     }
 
-    private fun fieldType(fieldName: String): Schema {
+    private fun fieldType(fieldName: ColumnName): Schema {
         return if (lex.matchKeyword("int")) {
             lex.eatKeyword("int")
             Schema {
@@ -206,7 +215,7 @@ class Parser(query: String) {
 
     private fun createView(): CreateViewData {
         lex.eatKeyword("view")
-        val viewName = lex.eatId()
+        val viewName = tableName()
         lex.eatKeyword("as")
         val query = query()
         return CreateViewData(viewName, query)
@@ -214,9 +223,9 @@ class Parser(query: String) {
 
     private fun createIndex(): CreateIndexData {
         lex.eatKeyword("index")
-        val index = lex.eatId()
+        val index = indexName()
         lex.eatKeyword("on")
-        val table = lex.eatId()
+        val table = tableName()
         lex.eatDelim('(')
         val field = field()
         lex.eatDelim(')')

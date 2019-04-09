@@ -3,7 +3,9 @@ package dev.komu.ahwen.query
 import dev.komu.ahwen.record.RID
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction
-import dev.komu.ahwen.types.SqlType
+import dev.komu.ahwen.types.ColumnName
+import dev.komu.ahwen.types.SqlType.INTEGER
+import dev.komu.ahwen.types.SqlType.VARCHAR
 
 class TableScan(ti: TableInfo, tx: Transaction) : UpdateScan {
 
@@ -21,37 +23,17 @@ class TableScan(ti: TableInfo, tx: Transaction) : UpdateScan {
         rf.close()
     }
 
-    override fun getVal(fieldName: String): Constant {
-        val type = schema.type(fieldName)
-        return when (type) {
-            SqlType.INTEGER -> IntConstant(rf.getInt(fieldName))
-            SqlType.VARCHAR -> StringConstant(rf.getString(fieldName))
-        }
+    override fun get(column: ColumnName) = when (schema.type(column)) {
+        INTEGER -> IntConstant(rf.getInt(column))
+        VARCHAR -> StringConstant(rf.getString(column))
     }
 
-    override fun getInt(fieldName: String): Int =
-        rf.getInt(fieldName)
+    override fun contains(column: ColumnName): Boolean =
+        column in schema
 
-    override fun getString(fieldName: String): String =
-        rf.getString(fieldName)
-
-    override fun hasField(fieldName: String): Boolean =
-        schema.hasField(fieldName)
-
-    override fun setVal(fieldName: String, value: Constant) {
-        val type = schema.type(fieldName)
-        return when (type) {
-            SqlType.INTEGER -> rf.setInt(fieldName, value.value as Int)
-            SqlType.VARCHAR -> rf.setString(fieldName, value.value as String)
-        }
-    }
-
-    override fun setInt(fieldName: String, value: Int) {
-        rf.setInt(fieldName, value)
-    }
-
-    override fun setString(fieldName: String, value: String) {
-        rf.setString(fieldName, value)
+    override fun set(column: ColumnName, value: Constant) = when (schema.type(column)) {
+        INTEGER -> rf.setInt(column, value.value as Int)
+        VARCHAR -> rf.setString(column, value.value as String)
     }
 
     override fun delete() {

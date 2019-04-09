@@ -4,6 +4,7 @@ import dev.komu.ahwen.buffer.Buffer
 import dev.komu.ahwen.buffer.BufferManager
 import dev.komu.ahwen.buffer.PageFormatter
 import dev.komu.ahwen.file.Block
+import dev.komu.ahwen.types.FileName
 
 /**
  * List of [Buffer]s pinned by a transaction.
@@ -33,7 +34,7 @@ class BufferList(private val bufferManager: BufferManager) {
     /**
      * Create a new block on given [fileName], format it using [formatter] and pin it.
      */
-    fun pinNew(fileName: String, formatter: PageFormatter): Block {
+    fun pinNew(fileName: FileName, formatter: PageFormatter): Block {
         val buffer = bufferManager.pinNew(fileName, formatter)
         val block = buffer.block ?: error("no block for new buffer")
         buffers[block] = buffer

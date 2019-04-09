@@ -3,9 +3,11 @@ package dev.komu.ahwen.query
 import dev.komu.ahwen.metadata.MetadataManager
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.types.ColumnName
+import dev.komu.ahwen.types.TableName
 
 class TablePlan(
-    tableName: String,
+    tableName: TableName,
     metadataManager: MetadataManager,
     private val tx: Transaction
 ) : Plan {
@@ -22,8 +24,8 @@ class TablePlan(
     override val recordsOutput: Int
         get() = si.numRecords
 
-    override fun distinctValues(fieldName: String): Int =
-        si.distinctValues(fieldName)
+    override fun distinctValues(column: ColumnName): Int =
+        si.distinctValues(column)
 
     override val schema: Schema
         get() = ti.schema

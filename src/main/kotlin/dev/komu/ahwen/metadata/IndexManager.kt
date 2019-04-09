@@ -5,6 +5,9 @@ import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.record.forEach
 import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.types.ColumnName
+import dev.komu.ahwen.types.IndexName
+import dev.komu.ahwen.types.TableName
 
 /**
  * Class responsible for maintaining indices.
@@ -29,26 +32,26 @@ class IndexManager(
         ti = tableManager.getTableInfo(TBL_INDEX_CAT, tx)
     }
 
-    fun createIndex(indexName: String, tableName: String, fieldName: String, tx: Transaction) {
-        TableManager.checkNameLength(indexName, COL_INDEX_NAME)
-        TableManager.checkNameLength(tableName, COL_TABLE_NAME)
-        TableManager.checkNameLength(fieldName, COL_FIELD_NAME)
+    fun createIndex(indexName: IndexName, tableName: TableName, fieldName: ColumnName, tx: Transaction) {
+        TableManager.checkNameLength(indexName.value, COL_INDEX_NAME)
+        TableManager.checkNameLength(tableName.value, COL_TABLE_NAME)
+        TableManager.checkNameLength(fieldName.value, COL_FIELD_NAME)
 
         ti.open(tx).use { rf ->
             rf.insert()
-            rf.setString(COL_INDEX_NAME, indexName)
-            rf.setString(COL_TABLE_NAME, tableName)
-            rf.setString(COL_FIELD_NAME, fieldName)
+            rf.setString(COL_INDEX_NAME, indexName.value)
+            rf.setString(COL_TABLE_NAME, tableName.value)
+            rf.setString(COL_FIELD_NAME, fieldName.value)
         }
     }
 
-    fun getIndexInfo(tableName: String, tx: Transaction): Map<String, IndexInfo> {
+    fun getIndexInfo(tableName: TableName, tx: Transaction): Map<ColumnName, IndexInfo> {
         ti.open(tx).use { rf ->
-            val result = mutableMapOf<String, IndexInfo>()
+            val result = mutableMapOf<ColumnName, IndexInfo>()
             rf.forEach {
-                if (rf.getString(COL_TABLE_NAME) == tableName) {
-                    val indexName = rf.getString(COL_INDEX_NAME)
-                    val fieldName = rf.getString(COL_FIELD_NAME)
+                if (rf.getString(COL_TABLE_NAME) == tableName.value) {
+                    val indexName = IndexName(rf.getString(COL_INDEX_NAME))
+                    val fieldName = ColumnName(rf.getString(COL_FIELD_NAME))
                     result[fieldName] = IndexInfo(indexName, tableName, fieldName, tx, metadataManager)
                 }
             }
@@ -57,9 +60,9 @@ class IndexManager(
     }
 
     companion object {
-        private const val TBL_INDEX_CAT = "idxcat"
-        private const val COL_INDEX_NAME = "indexName"
-        private const val COL_TABLE_NAME = "tableName"
-        private const val COL_FIELD_NAME = "fieldName"
+        private val TBL_INDEX_CAT = TableName("idxcat")
+        private val COL_INDEX_NAME = ColumnName("indexName")
+        private val COL_TABLE_NAME = ColumnName("tableName")
+        private val COL_FIELD_NAME = ColumnName("fieldName")
     }
 }

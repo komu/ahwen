@@ -1,6 +1,7 @@
 package dev.komu.ahwen.query
 
 import dev.komu.ahwen.record.Schema
+import dev.komu.ahwen.types.ColumnName
 
 class Predicate() {
 
@@ -42,7 +43,7 @@ class Predicate() {
         return result.takeIf { it.terms.isNotEmpty() }
     }
 
-    fun equatesWithConstant(fieldName: String): Constant? {
+    fun equatesWithConstant(fieldName: ColumnName): Constant? {
         for (term in terms) {
             val value = term.equatesWithConstant(fieldName)
             if (value != null)
@@ -51,7 +52,7 @@ class Predicate() {
         return null
     }
 
-    fun equatesWithField(fieldName: String): String? {
+    fun equatesWithField(fieldName: ColumnName): ColumnName? {
         for (term in terms) {
             val field = term.equatesWithField(fieldName)
             if (field != null)

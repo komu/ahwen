@@ -1,5 +1,6 @@
 package dev.komu.ahwen.file
 
+import dev.komu.ahwen.types.FileName
 import java.nio.ByteBuffer
 
 /**
@@ -27,18 +28,18 @@ interface FileManager {
      * Adds a new block to given file and returns identifier for it.
      * If the file does not exist, it will be created.
      */
-    fun append(fileName: String, bb: ByteBuffer): Block
+    fun append(fileName: FileName, bb: ByteBuffer): Block
 
     /**
      * Returns the amount of blocks stored in the file. If the file does not exist,
      * an empty file will be created.
      */
-    fun size(fileName: String): Int
+    fun size(fileName: FileName): Int
 
     /**
      * Returns the number of last block, or `null` if the file is empty. If the file
      * does not exist, an empty file will be created.
      */
-    fun lastBlock(fileName: String): Int? =
+    fun lastBlock(fileName: FileName): Int? =
         size(fileName).takeIf { it > 0 }?.let { it - 1 }
 }

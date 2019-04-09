@@ -7,6 +7,7 @@ import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
 import dev.komu.ahwen.file.Page.Companion.INT_SIZE
 import dev.komu.ahwen.file.Page.Companion.strSize
 import dev.komu.ahwen.tx.TxNum
+import dev.komu.ahwen.types.FileName
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -38,7 +39,7 @@ import kotlin.concurrent.withLock
  */
 class LogManager(
     private val fileManager: FileManager,
-    private val logFile: String
+    private val logFile: FileName
 ) : Iterable<BasicLogRecord> {
 
     /** The last page's data */
@@ -121,6 +122,8 @@ class LogManager(
                 lastPage.setInt(currentPos, value.txnum)
             is Int ->
                 lastPage.setInt(currentPos, value)
+            is FileName ->
+                lastPage.setString(currentPos, value.value)
             else ->
                 error("unexpected value $value of type ${value.javaClass}")
         }
@@ -132,6 +135,8 @@ class LogManager(
         get() = when (this) {
             is String ->
                 strSize(length)
+            is FileName ->
+                strSize(value.length)
             is Int, is TxNum ->
                 INT_SIZE
             else ->

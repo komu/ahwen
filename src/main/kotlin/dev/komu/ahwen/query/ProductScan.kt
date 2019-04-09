@@ -1,5 +1,7 @@
 package dev.komu.ahwen.query
 
+import dev.komu.ahwen.types.ColumnName
+
 class ProductScan(private val s1: Scan, private val s2: Scan) : Scan {
     init {
         s1.next()
@@ -24,9 +26,9 @@ class ProductScan(private val s1: Scan, private val s2: Scan) : Scan {
         s2.close()
     }
 
-    override fun getVal(fieldName: String): Constant =
-        if (s1.hasField(fieldName)) s1.getVal(fieldName) else s2.getVal(fieldName)
+    override fun get(column: ColumnName): Constant =
+        if (column in s1) s1[column] else s2[column]
 
-    override fun hasField(fieldName: String): Boolean =
-        s1.hasField(fieldName) || s2.hasField(fieldName)
+    override fun contains(column: ColumnName): Boolean =
+        column in s1 || column in s2
 }

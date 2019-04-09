@@ -8,11 +8,12 @@ import dev.komu.ahwen.metadata.MetadataManager
 import dev.komu.ahwen.planner.Planner
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.tx.concurrency.LockTable
+import dev.komu.ahwen.types.FileName
 import java.io.File
 
 class AhwenDatabase(dir: File) {
     private val fileManager = DefaultFileManager(dir)
-    private val logManager = LogManager(fileManager, "log")
+    private val logManager = LogManager(fileManager, FileName("log"))
     private val bufferManager = BufferManager(1000, fileManager, logManager)
     private val lockTable = LockTable()
     private val metadataManager: MetadataManager

@@ -1,5 +1,6 @@
 package dev.komu.ahwen.file
 
+import dev.komu.ahwen.types.FileName
 import java.nio.ByteBuffer
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -9,7 +10,7 @@ import kotlin.concurrent.withLock
  */
 class MemoryFileManager : FileManager {
 
-    private val blocksByFiles = mutableMapOf<String, Int>()
+    private val blocksByFiles = mutableMapOf<FileName, Int>()
     private val dataByBlock = mutableMapOf<Block, ByteArray>()
     private val lock = ReentrantLock()
 
@@ -27,7 +28,7 @@ class MemoryFileManager : FileManager {
         }
     }
 
-    override fun append(fileName: String, bb: ByteBuffer): Block {
+    override fun append(fileName: FileName, bb: ByteBuffer): Block {
         lock.withLock {
             val size = size(fileName)
             blocksByFiles[fileName] = size + 1
@@ -37,7 +38,7 @@ class MemoryFileManager : FileManager {
         }
     }
 
-    override fun size(fileName: String): Int =
+    override fun size(fileName: FileName): Int =
         lock.withLock {
             blocksByFiles.getOrPut(fileName) { 0 }
         }

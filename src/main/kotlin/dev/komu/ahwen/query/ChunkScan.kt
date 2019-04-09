@@ -4,6 +4,7 @@ import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.record.RecordPage
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.types.ColumnName
 import dev.komu.ahwen.types.SqlType
 
 class ChunkScan(
@@ -39,16 +40,16 @@ class ChunkScan(
         }
     }
 
-    override fun getVal(fieldName: String): Constant {
-        val type = schema.type(fieldName)
+    override fun get(column: ColumnName): Constant {
+        val type = schema.type(column)
         return when (type) {
-            SqlType.INTEGER -> IntConstant(rp.getInt(fieldName))
-            SqlType.VARCHAR -> StringConstant(rp.getString(fieldName))
+            SqlType.INTEGER -> IntConstant(rp.getInt(column))
+            SqlType.VARCHAR -> StringConstant(rp.getString(column))
         }
     }
 
-    override fun hasField(fieldName: String): Boolean =
-        schema.hasField(fieldName)
+    override fun contains(column: ColumnName): Boolean =
+        column in schema
 
     override fun close() {
         pages.forEach(RecordPage::close)

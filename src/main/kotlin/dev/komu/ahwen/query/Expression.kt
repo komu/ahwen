@@ -1,13 +1,14 @@
 package dev.komu.ahwen.query
 
 import dev.komu.ahwen.record.Schema
+import dev.komu.ahwen.types.ColumnName
 
 sealed class Expression {
 
     fun asConstant(): Constant =
         (this as ConstantExpression).value
 
-    fun asFieldName(): String=
+    fun asFieldName(): ColumnName =
         (this as FieldNameExpression).fieldName
 
     abstract fun evaluate(scan: Scan): Constant
@@ -21,8 +22,8 @@ class ConstantExpression(val value: Constant) : Expression() {
     override fun toString() = value.toString()
 }
 
-class FieldNameExpression(val fieldName: String) : Expression() {
-    override fun evaluate(scan: Scan) = scan.getVal(fieldName)
-    override fun appliesTo(schema: Schema) = schema.hasField(fieldName)
-    override fun toString() = fieldName
+class FieldNameExpression(val fieldName: ColumnName) : Expression() {
+    override fun evaluate(scan: Scan) = scan[fieldName]
+    override fun appliesTo(schema: Schema) = fieldName in schema
+    override fun toString() = fieldName.value
 }

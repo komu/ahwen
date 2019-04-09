@@ -4,7 +4,9 @@ import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.record.forEach
 import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.types.ColumnName
 import dev.komu.ahwen.types.SqlType
+import dev.komu.ahwen.types.TableName
 
 /**
  * Class responsible for maintaining tables.
@@ -15,6 +17,7 @@ class TableManager(isNew: Boolean, tx: Transaction) {
         stringField(COL_TABLE_NAME, MAX_NAME)
         intField(COL_REC_LENGTH)
     })
+
     private val fieldCatalogInfo = TableInfo(TBL_FIELD_CAT, Schema {
         stringField(COL_TABLE_NAME, MAX_NAME)
         stringField(COL_FIELD_NAME, MAX_NAME)
@@ -30,14 +33,14 @@ class TableManager(isNew: Boolean, tx: Transaction) {
         }
     }
 
-    fun createTable(tableName: String, schema: Schema, tx: Transaction) {
-        checkNameLength(tableName, "name")
+    fun createTable(tableName: TableName, schema: Schema, tx: Transaction) {
+        checkNameLength(tableName.value, COL_TABLE_NAME)
         val ti = TableInfo(tableName, schema)
 
         // insert one record into tblcat
         tableCatalogInfo.open(tx).use { tcatFile ->
             tcatFile.insert()
-            tcatFile.setString(COL_TABLE_NAME, tableName)
+            tcatFile.setString(COL_TABLE_NAME, tableName.value)
             tcatFile.setInt(COL_REC_LENGTH, ti.recordLength)
         }
 
@@ -45,8 +48,8 @@ class TableManager(isNew: Boolean, tx: Transaction) {
         fieldCatalogInfo.open(tx).use { fcat ->
             for (field in schema.fields) {
                 fcat.insert()
-                fcat.setString(COL_TABLE_NAME, tableName)
-                fcat.setString(COL_FIELD_NAME, field)
+                fcat.setString(COL_TABLE_NAME, tableName.value)
+                fcat.setString(COL_FIELD_NAME, field.value)
                 fcat.setInt(COL_TYPE, schema.type(field).code)
                 fcat.setInt(COL_LENGTH, schema.length(field))
                 fcat.setInt(COL_OFFSET, ti.offset(field))
@@ -54,16 +57,16 @@ class TableManager(isNew: Boolean, tx: Transaction) {
         }
     }
 
-    fun getTableInfo(tableName: String, tx: Transaction): TableInfo {
+    fun getTableInfo(tableName: TableName, tx: Transaction): TableInfo {
         val recLen = getRecordLength(tx, tableName)
 
         val schema = Schema.Builder()
-        val offsets = mutableMapOf<String, Int>()
+        val offsets = mutableMapOf<ColumnName, Int>()
 
         fieldCatalogInfo.open(tx).use { fcat ->
             fcat.forEach {
-                if (fcat.getString(COL_TABLE_NAME) == tableName) {
-                    val field = fcat.getString(COL_FIELD_NAME)
+                if (fcat.getString(COL_TABLE_NAME) == tableName.value) {
+                    val field = ColumnName(fcat.getString(COL_FIELD_NAME))
                     val type = SqlType(fcat.getInt(COL_TYPE))
                     val length = fcat.getInt(COL_LENGTH)
 
@@ -76,10 +79,10 @@ class TableManager(isNew: Boolean, tx: Transaction) {
         return TableInfo(tableName, schema.build(), offsets, recLen)
     }
 
-    private fun getRecordLength(tx: Transaction, tableName: String): Int {
+    private fun getRecordLength(tx: Transaction, tableName: TableName): Int {
         tableCatalogInfo.open(tx).use { tcat ->
             tcat.forEach {
-                if (tcat.getString(COL_TABLE_NAME) == tableName)
+                if (tcat.getString(COL_TABLE_NAME) == tableName.value)
                     return tcat.getInt(COL_REC_LENGTH)
             }
         }
@@ -90,17 +93,17 @@ class TableManager(isNew: Boolean, tx: Transaction) {
     companion object {
         const val MAX_NAME = 16
 
-        private const val TBL_TABLE_CAT = "tblcat"
-        private const val TBL_FIELD_CAT = "fldcat"
-        private const val COL_TABLE_NAME = "tblname"
-        private const val COL_FIELD_NAME = "fldname"
-        private const val COL_TYPE = "type"
-        private const val COL_LENGTH = "length"
-        private const val COL_OFFSET = "offset"
-        private const val COL_REC_LENGTH = "reclength"
+        val TBL_TABLE_CAT = TableName("tblcat")
+        private val TBL_FIELD_CAT = TableName("fldcat")
+        val COL_TABLE_NAME = ColumnName("tblname")
+        private val COL_FIELD_NAME = ColumnName("fldname")
+        private val COL_TYPE = ColumnName("type")
+        private val COL_LENGTH = ColumnName("length")
+        private val COL_OFFSET = ColumnName("offset")
+        private val COL_REC_LENGTH = ColumnName("reclength")
 
-        fun checkNameLength(name: String, description: String) {
-            require(name.length <= MAX_NAME) { "max name length is $MAX_NAME, but $description '$name' is '${name.length}"}
+        fun checkNameLength(name: String, column: ColumnName) {
+            require(name.length <= MAX_NAME) { "max name length is $MAX_NAME, but $column '$name' is '${name.length}"}
         }
     }
 }

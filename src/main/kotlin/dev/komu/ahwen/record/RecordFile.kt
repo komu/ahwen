@@ -2,6 +2,7 @@ package dev.komu.ahwen.record
 
 import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.types.ColumnName
 import java.io.Closeable
 
 /**
@@ -39,17 +40,17 @@ class RecordFile(private val ti: TableInfo, private val tx: Transaction) : Close
         }
     }
 
-    fun getInt(field: String) =
+    fun getInt(field: ColumnName) =
         rp.getInt(field)
 
-    fun getString(field: String) =
+    fun getString(field: ColumnName) =
         rp.getString(field)
 
-    fun setInt(field: String, value: Int) {
+    fun setInt(field: ColumnName, value: Int) {
         rp.setInt(field, value)
     }
 
-    fun setString(field: String, value: String) {
+    fun setString(field: ColumnName, value: String) {
         rp.setString(field, value)
     }
 

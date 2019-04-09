@@ -1,15 +1,17 @@
 package dev.komu.ahwen.query
 
-class ProjectScan(private val scan: Scan, private val fieldList: Collection<String>) : Scan {
+import dev.komu.ahwen.types.ColumnName
 
-    override fun getVal(fieldName: String): Constant =
-        if (hasField(fieldName))
-            scan.getVal(fieldName)
+class ProjectScan(private val scan: Scan, private val columns: Collection<ColumnName>) : Scan {
+
+    override fun get(column: ColumnName): Constant =
+        if (column in columns)
+            scan[column]
         else
-            error("field not found $fieldName")
+            error("field not found $column")
 
-    override fun hasField(fieldName: String): Boolean =
-        fieldName in fieldList
+    override fun contains(column: ColumnName): Boolean =
+        column in columns
 
     override fun beforeFirst() {
         scan.beforeFirst()

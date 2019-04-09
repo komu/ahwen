@@ -3,6 +3,7 @@ package dev.komu.ahwen.query.materialize
 import dev.komu.ahwen.query.Constant
 import dev.komu.ahwen.query.Scan
 import dev.komu.ahwen.record.RID
+import dev.komu.ahwen.types.ColumnName
 
 class SortScan(
     runs: List<TempTable>,
@@ -51,11 +52,11 @@ class SortScan(
         s2?.close()
     }
 
-    override fun getVal(fieldName: String): Constant =
-        currentScan!!.getVal(fieldName)
+    override fun get(column: ColumnName): Constant =
+        currentScan!![column]
 
-    override fun hasField(fieldName: String) =
-        currentScan!!.hasField(fieldName)
+    override fun contains(column: ColumnName) =
+        column in currentScan!!
 
     fun savePosition() {
         savedPosition = Pair(s1.rid, s2?.rid)

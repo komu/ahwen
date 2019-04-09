@@ -1,6 +1,7 @@
 package dev.komu.ahwen.file
 
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
+import dev.komu.ahwen.types.FileName
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -10,22 +11,25 @@ import java.nio.ByteBuffer
 internal class DefaultFileManagerTest {
 
     private val buffer = ByteBuffer.allocateDirect(BLOCK_SIZE)
+    private val myFile1 = FileName("my-file")
+    private val myFile2 = FileName("my-file2")
 
     @Test
     fun `appending blocks`(@TempDir dir: File) {
         val fm = DefaultFileManager(dir)
 
-        assertEquals(0, fm.size("my-file"))
+        assertEquals(0, fm.size(myFile1))
 
-        fm.append("my-file", buffer)
-        assertEquals(1, fm.size("my-file"))
+        fm.append(myFile1, buffer)
+        assertEquals(1, fm.size(myFile1))
 
-        fm.append("my-file", buffer)
-        assertEquals(2, fm.size("my-file"))
+        fm.append(myFile1, buffer)
+        assertEquals(2, fm.size(myFile1))
 
-        fm.append("my-file2", buffer)
-        assertEquals(2, fm.size("my-file"))
-        assertEquals(1, fm.size("my-file2"))
+
+        fm.append(myFile2, buffer)
+        assertEquals(2, fm.size(myFile1))
+        assertEquals(1, fm.size(myFile2))
     }
 
     @Test
@@ -33,11 +37,11 @@ internal class DefaultFileManagerTest {
         val fm = DefaultFileManager(dir)
 
         buffer.put(byteArrayOf(1, 2, 3))
-        val block1 = fm.append("my-file", buffer)
+        val block1 = fm.append(myFile1, buffer)
 
         buffer.flip()
         buffer.put(byteArrayOf(6, 5, 4))
-        val block2 = fm.append("my-file", buffer)
+        val block2 = fm.append(myFile1, buffer)
 
         fm.read(block1, buffer)
         buffer.flip()

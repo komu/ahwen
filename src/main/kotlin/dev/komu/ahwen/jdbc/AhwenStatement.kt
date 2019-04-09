@@ -18,7 +18,7 @@ class AhwenStatement(private val db: AhwenDatabase) : Statement by unimplemented
         plan.open().use { scan ->
             val rows = mutableListOf<Map<String, Constant>>()
             scan.forEach {
-                rows += plan.schema.fields.map { it to scan.getVal(it) }.toMap()
+                rows += plan.schema.fields.map { it.value to scan[it] }.toMap()
             }
             return AhwenResultSet(rows)
         }

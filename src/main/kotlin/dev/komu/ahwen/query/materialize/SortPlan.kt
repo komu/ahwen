@@ -5,10 +5,11 @@ import dev.komu.ahwen.query.Scan
 import dev.komu.ahwen.query.UpdateScan
 import dev.komu.ahwen.query.insertRowFrom
 import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.types.ColumnName
 
 class SortPlan(
     private val plan: Plan,
-    sortFields: List<String>,
+    sortFields: List<ColumnName>,
     private val tx: Transaction
 ) : Plan {
 
@@ -32,8 +33,8 @@ class SortPlan(
     override val recordsOutput: Int
         get() = plan.recordsOutput
 
-    override fun distinctValues(fieldName: String): Int =
-        plan.distinctValues(fieldName)
+    override fun distinctValues(column: ColumnName): Int =
+        plan.distinctValues(column)
 
     private fun splitIntoRuns(src: Scan): MutableList<TempTable> {
         val temps = mutableListOf<TempTable>()

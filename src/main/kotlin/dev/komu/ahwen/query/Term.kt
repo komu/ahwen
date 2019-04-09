@@ -1,6 +1,7 @@
 package dev.komu.ahwen.query
 
 import dev.komu.ahwen.record.Schema
+import dev.komu.ahwen.types.ColumnName
 
 class Term(private val lhs: Expression, private val rhs: Expression) {
 
@@ -17,7 +18,7 @@ class Term(private val lhs: Expression, private val rhs: Expression) {
             Integer.MAX_VALUE
     }
 
-    fun equatesWithConstant(fieldName: String): Constant? = when {
+    fun equatesWithConstant(fieldName: ColumnName): Constant? = when {
         lhs is FieldNameExpression && rhs is ConstantExpression && lhs.fieldName == fieldName ->
             rhs.value
         rhs is FieldNameExpression && lhs is ConstantExpression && rhs.fieldName == fieldName ->
@@ -26,7 +27,7 @@ class Term(private val lhs: Expression, private val rhs: Expression) {
             null
     }
 
-    fun equatesWithField(fieldName: String): String? = when {
+    fun equatesWithField(fieldName: ColumnName): ColumnName? = when {
         lhs is FieldNameExpression && rhs is FieldNameExpression && lhs.fieldName == fieldName ->
             rhs.fieldName
         lhs is FieldNameExpression && rhs is FieldNameExpression && rhs.fieldName == fieldName ->

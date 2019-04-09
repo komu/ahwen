@@ -135,7 +135,7 @@ class RecoveryManager(
     }
 
     private fun isTemporaryBlock(block: Block): Boolean =
-        block.filename.startsWith("temp")
+        block.filename.isTemporary
 
     private class LogRecordIterator(private val iterator: Iterator<BasicLogRecord>) : Iterator<LogRecord> {
         override fun hasNext() = iterator.hasNext()

@@ -1,8 +1,11 @@
 package dev.komu.ahwen.metadata
 
+import dev.komu.ahwen.metadata.TableManager.Companion.COL_TABLE_NAME
+import dev.komu.ahwen.metadata.TableManager.Companion.TBL_TABLE_CAT
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.record.forEach
 import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.types.TableName
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -11,7 +14,7 @@ import kotlin.concurrent.withLock
  */
 class StatManager(private val tableManager: TableManager, tx: Transaction) {
 
-    private val tableStats = mutableMapOf<String, StatInfo>()
+    private val tableStats = mutableMapOf<TableName, StatInfo>()
     private var numCalls = 0
     private val lock = ReentrantLock()
 
@@ -19,7 +22,7 @@ class StatManager(private val tableManager: TableManager, tx: Transaction) {
         refreshStatistics(tx)
     }
 
-    fun getStatInfo(tableName: String, ti: TableInfo, tx: Transaction): StatInfo {
+    fun getStatInfo(tableName: TableName, ti: TableInfo, tx: Transaction): StatInfo {
         lock.withLock {
             numCalls++
 
@@ -37,10 +40,10 @@ class StatManager(private val tableManager: TableManager, tx: Transaction) {
             tableStats.clear()
             numCalls = 0
 
-            val tcatInfo = tableManager.getTableInfo("tblcat", tx)
+            val tcatInfo = tableManager.getTableInfo(TBL_TABLE_CAT, tx)
             tcatInfo.open(tx).use { tcatFile ->
                 tcatFile.forEach {
-                    val tableName = tcatFile.getString("tblname")
+                    val tableName = TableName(tcatFile.getString(COL_TABLE_NAME))
                     val ti = tableManager.getTableInfo(tableName, tx)
                     tableStats[tableName] = calcTableStats(ti, tx)
                 }

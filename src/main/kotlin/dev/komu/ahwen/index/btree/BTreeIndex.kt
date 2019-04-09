@@ -9,16 +9,18 @@ import dev.komu.ahwen.record.RID
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.types.IndexName
 import dev.komu.ahwen.types.SqlType
+import dev.komu.ahwen.types.TableName
 import kotlin.math.ln
 
 class BTreeIndex(
-    indexName: String,
+    indexName: IndexName,
     leafSchema: Schema,
     private val tx: Transaction
 ) : Index {
 
-    private val leafTi: TableInfo = TableInfo("${indexName}leaf", leafSchema)
+    private val leafTi: TableInfo = TableInfo(TableName("${indexName}leaf"), leafSchema)
     private val dirTi: TableInfo
     private val rootBlock: Block
     private var leaf: BTreeLeaf? = null
@@ -28,17 +30,17 @@ class BTreeIndex(
             tx.append(leafTi.fileName, BTreePageFormatter(leafTi, -1))
 
         val dirSchema = Schema {
-            copyFieldFrom("block", leafSchema)
-            copyFieldFrom("dataval", leafSchema)
+            copyFieldFrom(BTreePage.COL_BLOCK, leafSchema)
+            copyFieldFrom(BTreePage.COL_DATAVAL, leafSchema)
         }
-        dirTi = TableInfo("${indexName}dir", dirSchema)
+        dirTi = TableInfo(TableName("${indexName}dir"), dirSchema)
         rootBlock = Block(dirTi.fileName, 0)
         if (tx.size(rootBlock.filename) == 0)
             tx.append(dirTi.fileName, BTreePageFormatter(dirTi, 0))
 
         val page = BTreePage(rootBlock, dirTi, tx)
         if (page.numRecs == 0) {
-            val fieldType = dirSchema.type("dataval")
+            val fieldType = dirSchema.type(BTreePage.COL_DATAVAL)
             val minValue = when (fieldType) {
                 SqlType.INTEGER -> IntConstant(Int.MIN_VALUE)
                 SqlType.VARCHAR -> StringConstant("")

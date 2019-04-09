@@ -2,10 +2,11 @@ package dev.komu.ahwen.query.aggregates
 
 import dev.komu.ahwen.query.Constant
 import dev.komu.ahwen.query.Scan
+import dev.komu.ahwen.types.ColumnName
 
 class GroupByScan(
     private val scan: Scan,
-    private val groupFields: Collection<String>,
+    private val groupFields: Collection<ColumnName>,
     private val aggregationFns: Collection<AggregationFn>
 ) : Scan {
 
@@ -48,13 +49,13 @@ class GroupByScan(
         scan.close()
     }
 
-    override fun getVal(fieldName: String): Constant {
-        if (fieldName in groupFields)
-            return groupValue[fieldName]
+    override fun get(column: ColumnName): Constant {
+        if (column in groupFields)
+            return groupValue[column]
 
-        return aggregationFns.first { it.fieldName == fieldName }.value
+        return aggregationFns.first { it.fieldName == column }.value
     }
 
-    override fun hasField(fieldName: String): Boolean =
-        fieldName in groupFields || aggregationFns.any { it.fieldName == fieldName }
+    override fun contains(column: ColumnName): Boolean =
+        column in groupFields || aggregationFns.any { it.fieldName == column }
 }

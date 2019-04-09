@@ -2,7 +2,10 @@ package dev.komu.ahwen.metadata
 
 import dev.komu.ahwen.metadata.TableManager.Companion.checkNameLength
 import dev.komu.ahwen.record.Schema
+import dev.komu.ahwen.record.forEach
 import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.types.ColumnName
+import dev.komu.ahwen.types.TableName
 
 /**
  * Class responsible for maintaining views.
@@ -19,33 +22,30 @@ class ViewManager(isNew: Boolean, private val tableManager: TableManager, tx: Tr
         }
     }
 
-    fun createView(name: String, def: String, tx: Transaction) {
-        checkNameLength(name, "name")
+    fun createView(name: TableName, def: String, tx: Transaction) {
+        checkNameLength(name.value, COL_VIEW_NAME)
         tableManager.getTableInfo(TBL_VIEW_CAT, tx).open(tx).use { rf ->
             rf.insert()
-            rf.setString(COL_VIEW_NAME, name)
+            rf.setString(COL_VIEW_NAME, name.value)
             rf.setString(COL_VIEW_DEF, def)
         }
     }
 
-    fun getViewDef(name: String, tx: Transaction): String? {
+    fun getViewDef(name: TableName, tx: Transaction): String? {
         tableManager.getTableInfo(TBL_VIEW_CAT, tx).open(tx).use { rf ->
-            var result: String? = null
-            while (rf.next()) {
-                if (rf.getString(COL_VIEW_NAME) == name) {
-                    result = rf.getString(COL_VIEW_DEF)
-                    break
-                }
+            rf.forEach {
+                if (rf.getString(COL_VIEW_NAME) == name.value)
+                    return rf.getString(COL_VIEW_DEF)
             }
-            return result
+            return null
         }
     }
 
     companion object {
 
-        private const val TBL_VIEW_CAT = "viewcat"
-        private const val COL_VIEW_NAME = "viewname"
-        private const val COL_VIEW_DEF = "viewdef"
+        private val TBL_VIEW_CAT = TableName("viewcat")
+        private val COL_VIEW_NAME = ColumnName("viewname")
+        private val COL_VIEW_DEF = ColumnName("viewdef")
 
         private const val MAX_VIEWDEF = 100
     }

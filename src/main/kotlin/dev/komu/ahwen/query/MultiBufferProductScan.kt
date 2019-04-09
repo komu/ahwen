@@ -2,6 +2,7 @@ package dev.komu.ahwen.query
 
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.types.ColumnName
 
 class MultiBufferProductScan(
     private val lhsScan: Scan,
@@ -36,11 +37,11 @@ class MultiBufferProductScan(
         productScan.close()
     }
 
-    override fun getVal(fieldName: String): Constant =
-        productScan.getVal(fieldName)
+    override fun get(column: ColumnName): Constant =
+        productScan[column]
 
-    override fun hasField(fieldName: String): Boolean =
-        productScan.hasField(fieldName)
+    override fun contains(column: ColumnName): Boolean =
+        column in productScan
 
     private fun useNextChunk(): Boolean {
         rhsScan?.close()

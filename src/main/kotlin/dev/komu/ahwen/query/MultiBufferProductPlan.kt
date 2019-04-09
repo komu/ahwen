@@ -4,6 +4,7 @@ import dev.komu.ahwen.buffer.BufferManager
 import dev.komu.ahwen.query.materialize.MaterializePlan
 import dev.komu.ahwen.query.materialize.TempTable
 import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.types.ColumnName
 
 class MultiBufferProductPlan(
     private val lhs: Plan,
@@ -31,8 +32,8 @@ class MultiBufferProductPlan(
     override val recordsOutput: Int
         get() = lhs.recordsOutput * rhs.recordsOutput
 
-    override fun distinctValues(fieldName: String): Int =
-        if (lhs.schema.hasField(fieldName)) lhs.distinctValues(fieldName) else rhs.distinctValues(fieldName)
+    override fun distinctValues(column: ColumnName): Int =
+        if (column in lhs.schema) lhs.distinctValues(column) else rhs.distinctValues(column)
 
     private fun copyRecordsFrom(plan: Plan): TempTable {
         val schema = plan.schema

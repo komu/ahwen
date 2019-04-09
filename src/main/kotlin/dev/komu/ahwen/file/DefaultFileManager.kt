@@ -1,5 +1,6 @@
 package dev.komu.ahwen.file
 
+import dev.komu.ahwen.types.FileName
 import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile
@@ -17,7 +18,7 @@ import kotlin.concurrent.withLock
 class DefaultFileManager(private val dbDirectory: File) : FileManager {
 
     val isNew = !dbDirectory.exists()
-    private val openFiles = mutableMapOf<String, FileChannel>()
+    private val openFiles = mutableMapOf<FileName, FileChannel>()
     private val lock = ReentrantLock()
     val stats = FileStats()
 
@@ -49,7 +50,7 @@ class DefaultFileManager(private val dbDirectory: File) : FileManager {
         }
     }
 
-    override fun append(fileName: String, bb: ByteBuffer): Block {
+    override fun append(fileName: FileName, bb: ByteBuffer): Block {
         lock.withLock {
             val newBlockNum = size(fileName)
             val block = Block(fileName, newBlockNum)
@@ -58,16 +59,16 @@ class DefaultFileManager(private val dbDirectory: File) : FileManager {
         }
     }
 
-    override fun size(fileName: String): Int {
+    override fun size(fileName: FileName): Int {
         lock.withLock {
             val fc = getFile(fileName)
             return fc.size().toInt() / Page.BLOCK_SIZE
         }
     }
 
-    private fun getFile(fileName: String): FileChannel =
+    private fun getFile(fileName: FileName): FileChannel =
         openFiles.getOrPut(fileName) {
-            val dbTable = File(dbDirectory, fileName)
+            val dbTable = File(dbDirectory, fileName.value)
             RandomAccessFile(dbTable, "rws").channel
         }
 }

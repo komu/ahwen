@@ -3,13 +3,14 @@ package dev.komu.ahwen.query.materialize
 import dev.komu.ahwen.query.Plan
 import dev.komu.ahwen.query.Scan
 import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.types.ColumnName
 
 class MergeJoinPlan(
     p1: Plan,
     p2: Plan,
-    private val fieldName1: String,
-    private val fieldName2: String,
-    private val tx: Transaction
+    private val fieldName1: ColumnName,
+    private val fieldName2: ColumnName,
+    tx: Transaction
 ) : Plan {
 
     private val p1 = SortPlan(p1, listOf(fieldName1), tx)
@@ -33,9 +34,9 @@ class MergeJoinPlan(
             return (p1.recordsOutput * p2.recordsOutput) / maxVals
         }
 
-    override fun distinctValues(fieldName: String): Int =
-        if (p1.schema.hasField(fieldName))
-            p1.distinctValues(fieldName)
+    override fun distinctValues(column: ColumnName): Int =
+        if (column in p1.schema)
+            p1.distinctValues(column)
         else
-            p2.distinctValues(fieldName)
+            p2.distinctValues(column)
 }

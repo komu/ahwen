@@ -1,6 +1,7 @@
 package dev.komu.ahwen.query
 
 import dev.komu.ahwen.record.RID
+import dev.komu.ahwen.types.ColumnName
 
 class SelectScan(private val scan: Scan, private val predicate: Predicate) : Scan, UpdateScan {
 
@@ -19,25 +20,15 @@ class SelectScan(private val scan: Scan, private val predicate: Predicate) : Sca
         scan.close()
     }
 
-    override fun getVal(fieldName: String): Constant =
-        scan.getVal(fieldName)
+    override fun get(column: ColumnName): Constant =
+        scan[column]
 
-    override fun hasField(fieldName: String): Boolean =
-        scan.hasField(fieldName)
+    override fun contains(column: ColumnName): Boolean =
+        column in scan
 
-    override fun setVal(fieldName: String, value: Constant) {
+    override fun set(column: ColumnName, value: Constant) {
         val us = scan as UpdateScan
-        us.setVal(fieldName, value)
-    }
-
-    override fun setInt(fieldName: String, value: Int) {
-        val us = scan as UpdateScan
-        us.setInt(fieldName, value)
-    }
-
-    override fun setString(fieldName: String, value: String) {
-        val us = scan as UpdateScan
-        us.setString(fieldName, value)
+        us[column] = value
     }
 
     override fun delete() {

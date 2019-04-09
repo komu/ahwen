@@ -6,6 +6,7 @@ import dev.komu.ahwen.file.Page
 import dev.komu.ahwen.log.LSN
 import dev.komu.ahwen.log.LogManager
 import dev.komu.ahwen.tx.TxNum
+import dev.komu.ahwen.types.FileName
 
 /**
  * Buffer is reusable [Page] of data that can be _pinned_ to a certain [Block].
@@ -87,7 +88,7 @@ class Buffer(fileManager: FileManager, private val logManager: LogManager) {
         pins = 0
     }
 
-    fun assignToNew(fileName: String, formatter: PageFormatter) {
+    fun assignToNew(fileName: FileName, formatter: PageFormatter) {
         flush()
         formatter.format(contents)
         block = contents.append(fileName)

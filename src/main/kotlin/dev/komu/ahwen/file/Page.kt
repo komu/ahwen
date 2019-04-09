@@ -3,6 +3,7 @@
 package dev.komu.ahwen.file
 
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
+import dev.komu.ahwen.types.FileName
 import java.nio.ByteBuffer
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -30,7 +31,7 @@ class Page(private val fileManager: FileManager) {
         }
     }
 
-    fun append(fileName: String): Block {
+    fun append(fileName: FileName): Block {
         lock.withLock {
             return fileManager.append(fileName, contents)
         }

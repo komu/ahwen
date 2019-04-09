@@ -4,11 +4,12 @@ import dev.komu.ahwen.index.Index
 import dev.komu.ahwen.query.Constant
 import dev.komu.ahwen.query.Scan
 import dev.komu.ahwen.query.TableScan
+import dev.komu.ahwen.types.ColumnName
 
 class IndexJoinScan(
     private val scan: Scan,
     private val index: Index,
-    private val joinField: String,
+    private val joinField: ColumnName,
     private val tableScan: TableScan
 ) : Scan {
 
@@ -41,13 +42,13 @@ class IndexJoinScan(
         index.close()
     }
 
-    override fun getVal(fieldName: String): Constant =
-        if (tableScan.hasField(fieldName)) tableScan.getVal(fieldName) else scan.getVal(fieldName)
+    override fun get(column: ColumnName): Constant =
+        if (column in tableScan) tableScan[column] else scan[column]
 
-    override fun hasField(fieldName: String): Boolean =
-        tableScan.hasField(fieldName) || scan.hasField(fieldName)
+    override fun contains(column: ColumnName): Boolean =
+        column in tableScan || column in scan
 
     private fun resetIndex() {
-        index.beforeFirst(scan.getVal(joinField))
+        index.beforeFirst(scan[joinField])
     }
 }

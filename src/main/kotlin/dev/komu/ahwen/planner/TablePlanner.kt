@@ -7,9 +7,10 @@ import dev.komu.ahwen.metadata.MetadataManager
 import dev.komu.ahwen.query.*
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.types.TableName
 
 class TablePlanner(
-    tableName: String,
+    tableName: TableName,
     private val myPredicate: Predicate,
     private val tx: Transaction,
     metadataManager: MetadataManager,
@@ -48,7 +49,7 @@ class TablePlanner(
     private fun makeIndexJoin(current: Plan, currentSchema: Schema): Plan? {
         for ((field, indexInfo) in indices) {
             val outerField = myPredicate.equatesWithField(field)
-            if (outerField != null && currentSchema.hasField(outerField)) {
+            if (outerField != null && outerField in currentSchema) {
                 val plan = addSelectPredicate(IndexJoinPlan(current, myPlan, indexInfo, outerField))
                 return addJoinPredicate(plan, currentSchema)
             }

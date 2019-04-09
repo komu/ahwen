@@ -3,6 +3,7 @@ package dev.komu.ahwen.log
 import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.file.MemoryFileManager
 import dev.komu.ahwen.file.Page
+import dev.komu.ahwen.types.FileName
 import dev.komu.ahwen.utils.isZeroed
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -13,7 +14,7 @@ import kotlin.test.assertFalse
 internal class LogManagerTest {
 
     private val fm = MemoryFileManager()
-    private val logManager = LogManager(fm, "logfile")
+    private val logManager = LogManager(fm, FileName("logfile"))
     private val buffer = ByteBuffer.allocate(Page.BLOCK_SIZE)
 
     @Test
@@ -35,12 +36,12 @@ internal class LogManagerTest {
     fun `flush records`() {
         val lsn = logManager.append(4, "foo")
 
-        fm.read(Block("logfile", 0), buffer)
+        fm.read(Block(FileName("logfile"), 0), buffer)
         assertTrue(buffer.isZeroed)
 
         logManager.flush(lsn)
 
-        fm.read(Block("logfile", 0), buffer)
+        fm.read(Block(FileName("logfile"), 0), buffer)
         assertFalse(buffer.isZeroed)
     }
 }

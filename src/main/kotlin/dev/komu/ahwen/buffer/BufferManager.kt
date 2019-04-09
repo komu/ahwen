@@ -4,6 +4,7 @@ import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.file.FileManager
 import dev.komu.ahwen.log.LogManager
 import dev.komu.ahwen.tx.TxNum
+import dev.komu.ahwen.types.FileName
 import dev.komu.ahwen.utils.await
 import java.time.Duration
 import java.time.Instant
@@ -49,7 +50,7 @@ class BufferManager(bufferCount: Int, fileManager: FileManager, logManager: LogM
      *
      * @throws BufferAbortException if no buffers could be freed within [MAX_TIME]
      */
-    fun pinNew(fileName: String, formatter: PageFormatter): Buffer {
+    fun pinNew(fileName: FileName, formatter: PageFormatter): Buffer {
         lock.withLock {
             try {
                 val startTime = Instant.now()

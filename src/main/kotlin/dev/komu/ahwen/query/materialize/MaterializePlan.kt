@@ -6,6 +6,7 @@ import dev.komu.ahwen.query.Scan
 import dev.komu.ahwen.query.copyFrom
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.types.TableName
 import kotlin.math.ceil
 
 class MaterializePlan(private val srcPlan: Plan, private val tx: Transaction) : Plan by srcPlan {
@@ -21,7 +22,7 @@ class MaterializePlan(private val srcPlan: Plan, private val tx: Transaction) : 
 
     override val blocksAccessed: Int
         get() {
-            val ti = TableInfo("", srcPlan.schema)
+            val ti = TableInfo(TableName.DUMMY, srcPlan.schema)
             val rpb = (BLOCK_SIZE / ti.recordLength).toDouble()
             return ceil(srcPlan.recordsOutput / rpb).toInt()
         }

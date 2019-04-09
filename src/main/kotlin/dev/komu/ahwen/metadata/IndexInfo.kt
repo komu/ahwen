@@ -3,9 +3,13 @@ package dev.komu.ahwen.metadata
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
 import dev.komu.ahwen.index.Index
 import dev.komu.ahwen.index.btree.BTreeIndex
+import dev.komu.ahwen.index.btree.BTreePage
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.types.ColumnName
+import dev.komu.ahwen.types.IndexName
 import dev.komu.ahwen.types.SqlType
+import dev.komu.ahwen.types.TableName
 
 /**
  * Describes an index.
@@ -14,9 +18,9 @@ import dev.komu.ahwen.types.SqlType
  * about the structure of the index so that it can be opened for scanning.
  */
 class IndexInfo(
-    private val indexName: String,
-    tableName: String,
-    private val fieldName: String,
+    private val indexName: IndexName,
+    tableName: TableName,
+    private val fieldName: ColumnName,
     private val tx: Transaction,
     metadataManager: MetadataManager
 ) {
@@ -46,21 +50,21 @@ class IndexInfo(
     /**
      * Estimate how many distinct values index has for given field.
      */
-    fun distinctValues(fieldName: String): Int =
+    fun distinctValues(fieldName: ColumnName): Int =
         if (fieldName == this.fieldName)
             1
         else
             minOf(si.distinctValues(fieldName), recordsOutput)
 
     private fun schema() = Schema {
-        intField("block")
-        intField("id")
+        intField(BTreePage.COL_BLOCK)
+        intField(BTreePage.COL_ID)
         val type = ti.schema.type(fieldName)
         when (type) {
             SqlType.INTEGER ->
-                intField("dataval")
+                intField(BTreePage.COL_DATAVAL)
             SqlType.VARCHAR ->
-                stringField("dataval", ti.schema.length(fieldName))
+                stringField(BTreePage.COL_DATAVAL, ti.schema.length(fieldName))
         }
     }
 

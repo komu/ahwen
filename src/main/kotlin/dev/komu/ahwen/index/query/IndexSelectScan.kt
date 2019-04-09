@@ -4,6 +4,7 @@ import dev.komu.ahwen.index.Index
 import dev.komu.ahwen.query.Constant
 import dev.komu.ahwen.query.Scan
 import dev.komu.ahwen.query.TableScan
+import dev.komu.ahwen.types.ColumnName
 
 class IndexSelectScan(
     private val index: Index,
@@ -31,9 +32,9 @@ class IndexSelectScan(
         tableScan.close()
     }
 
-    override fun getVal(fieldName: String): Constant =
-        tableScan.getVal(fieldName)
+    override fun get(column: ColumnName): Constant =
+        tableScan[column]
 
-    override fun hasField(fieldName: String): Boolean =
-        tableScan.hasField(fieldName)
+    override fun contains(column: ColumnName): Boolean =
+        column in tableScan
 }

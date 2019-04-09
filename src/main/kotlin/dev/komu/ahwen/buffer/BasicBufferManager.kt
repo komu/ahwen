@@ -4,6 +4,7 @@ import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.file.FileManager
 import dev.komu.ahwen.log.LogManager
 import dev.komu.ahwen.tx.TxNum
+import dev.komu.ahwen.types.FileName
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -51,7 +52,7 @@ class BasicBufferManager(bufferCount: Int, fileManager: FileManager, logManager:
         }
     }
 
-    fun pinNew(fileName: String, formatter: PageFormatter): Buffer? {
+    fun pinNew(fileName: FileName, formatter: PageFormatter): Buffer? {
         lock.withLock {
             val buffer = chooseUnpinnedBuffer()
                 ?: return null

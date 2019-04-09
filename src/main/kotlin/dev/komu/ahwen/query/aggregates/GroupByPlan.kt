@@ -5,10 +5,11 @@ import dev.komu.ahwen.query.Scan
 import dev.komu.ahwen.query.materialize.SortPlan
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.types.ColumnName
 
 class GroupByPlan(
     plan: Plan,
-    private val groupFields: Collection<String>,
+    private val groupFields: Collection<ColumnName>,
     private val aggregationFns: Collection<AggregationFn>,
     tx: Transaction
 ) : Plan {
@@ -36,9 +37,9 @@ class GroupByPlan(
             return result
         }
 
-    override fun distinctValues(fieldName: String): Int =
-        if (plan.schema.hasField(fieldName))
-            plan.distinctValues(fieldName)
+    override fun distinctValues(column: ColumnName): Int =
+        if (column in plan.schema)
+            plan.distinctValues(column)
         else
             recordsOutput
 }
