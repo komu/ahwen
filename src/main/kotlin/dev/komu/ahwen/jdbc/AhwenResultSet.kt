@@ -18,7 +18,7 @@ class AhwenResultSet(private val rows: MutableList<Map<String, SqlValue>>) : Res
     }
 
     override fun getObject(columnLabel: String): Any {
-        val value = rows[index][columnLabel] ?: error("unknown column $columnLabel")
+        val value = rows[index][columnLabel] ?: error("unknown column '$columnLabel'")
         return value.value
     }
 

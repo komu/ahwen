@@ -53,7 +53,7 @@ class Parser(query: String) {
 
     fun query(): QueryData {
         lex.eatKeyword("select")
-        val fields = selectList()
+        val selectExps = selectList()
         lex.eatKeyword("from")
         val tables = tableList()
         val predicate = if (lex.matchKeyword("where")) {
@@ -63,20 +63,50 @@ class Parser(query: String) {
             Predicate()
         }
 
+        val groupBy = if (lex.matchKeyword("group")) {
+            lex.eatKeyword("group")
+            lex.eatKeyword("by")
+            columnNames()
+        } else {
+            emptyList()
+        }
+
         val orderBy = if (lex.matchKeyword("order")) {
             lex.eatKeyword("order")
             lex.eatKeyword("by")
-            selectList()
+            columnNames()
         } else {
             emptyList()
         }
 
         lex.assertEnd()
 
-        return QueryData(fields, tables, predicate, orderBy)
+        return QueryData(selectExps, tables, predicate, groupBy, orderBy)
     }
 
-    private fun selectList(): List<ColumnName> {
+    private fun selectList(): List<SelectExp> {
+        val result = mutableListOf<SelectExp>()
+
+        result += selectExp()
+        while (lex.matchDelim(',')) {
+            lex.eatDelim(',')
+            result += selectExp()
+        }
+        return result
+    }
+
+    private fun selectExp(): SelectExp {
+        val columnOrFunction = field()
+        if (lex.matchDelim('(')) {
+            lex.eatDelim('(')
+            val column = field()
+            lex.eatDelim(')')
+            return SelectExp.Aggregate(columnOrFunction.value, column)
+        }
+        return SelectExp.Column(columnOrFunction)
+    }
+
+    private fun columnNames(): List<ColumnName> {
         val result = mutableListOf<ColumnName>()
         result += field()
         while (lex.matchDelim(',')) {

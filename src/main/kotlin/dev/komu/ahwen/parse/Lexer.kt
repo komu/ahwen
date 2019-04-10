@@ -83,7 +83,8 @@ class Lexer(s: String) {
 
         private val keywords = listOf(
             "select", "from", "where", "and", "insert", "into", "values", "int", "varchar",
-            "update", "set", "delete", "on", "create", "table", "view", "as", "index"
+            "update", "set", "delete", "on", "create", "table", "view", "as", "index", "order",
+            "by", "group"
         )
     }
 }

@@ -75,4 +75,31 @@ class IntegrationTest {
 
         assertEquals(listOf(4, 1, 3, 2), numbers)
     }
+
+    @Test
+    fun `group by`(@TempDir dir: File) {
+        val connection = AhwenConnection(File(dir, "db"))
+
+        val result = mutableMapOf<String, Pair<Int, Int>>()
+        connection.createStatement().use { stmt ->
+            stmt.executeUpdate("create table foo (key varchar(10), value int)")
+            stmt.executeUpdate("insert into foo (key, value) values ('a', 10)")
+            stmt.executeUpdate("insert into foo (key, value) values ('a', 20)")
+            stmt.executeUpdate("insert into foo (key, value) values ('b', 30)")
+            stmt.executeUpdate("insert into foo (key, value) values ('c', 40)")
+            stmt.executeUpdate("insert into foo (key, value) values ('c', 60)")
+            stmt.executeUpdate("insert into foo (key, value) values ('c', 50)")
+
+            stmt.executeQuery("select key, count(value), max(value) from foo group by key").use { rs ->
+                while (rs.next())
+                    result[rs.getString("key")] = Pair(rs.getInt("countofvalue"), rs.getInt("maxofvalue"))
+            }
+        }
+
+        assertEquals(mapOf(
+            "a" to Pair(2, 20),
+            "b" to Pair(1, 30),
+            "c" to Pair(3, 60)
+        ), result)
+    }
 }

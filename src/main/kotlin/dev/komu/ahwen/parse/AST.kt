@@ -17,14 +17,15 @@ class DeleteData(val table: TableName, val predicate: Predicate) : CommandData()
 class ModifyData(val table: TableName, val fieldName: ColumnName, val newValue: Expression, val predicate: Predicate) : CommandData()
 
 class QueryData(
-    val fields: List<ColumnName>,
+    val selectExps: List<SelectExp>,
     val tables: List<TableName>,
     val predicate: Predicate,
+    val groupBy: List<ColumnName>,
     val orderBy: List<ColumnName>
     ) {
     override fun toString(): String = buildString {
         append("select ")
-        fields.joinTo(this, separator = ", ")
+        selectExps.joinTo(this, separator = ", ")
         append(" from ")
         tables.joinTo(this, separator = ", ")
 
@@ -36,6 +37,16 @@ class QueryData(
             append(" order by ")
             orderBy.joinTo(this, separator = ", ")
         }
+    }
+}
+
+sealed class SelectExp {
+    class Column(val column: ColumnName) : SelectExp() {
+        override fun toString() = column.toString()
+    }
+
+    class Aggregate(val fn: String, val column: ColumnName) : SelectExp() {
+        override fun toString() = "$fn($column)"
     }
 }
 
