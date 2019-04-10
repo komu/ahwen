@@ -1,12 +1,16 @@
 package dev.komu.ahwen.record
 
 import dev.komu.ahwen.file.Block
+import dev.komu.ahwen.query.Constant
+import dev.komu.ahwen.query.IntConstant
+import dev.komu.ahwen.query.StringConstant
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.ColumnName
+import dev.komu.ahwen.types.SqlType
 import java.io.Closeable
 
 /**
- * A cursor into reading records described by [ti] from a file.
+ * A cursor for reading records described by [ti] from a file.
  */
 class RecordFile(private val ti: TableInfo, private val tx: Transaction) : Closeable {
 
@@ -40,18 +44,11 @@ class RecordFile(private val ti: TableInfo, private val tx: Transaction) : Close
         }
     }
 
-    fun getInt(field: ColumnName) =
-        rp.getInt(field)
+    fun getValue(column: ColumnName, type: SqlType) =
+        rp.getValue(column, type)
 
-    fun getString(field: ColumnName) =
-        rp.getString(field)
-
-    fun setInt(field: ColumnName, value: Int) {
-        rp.setInt(field, value)
-    }
-
-    fun setString(field: ColumnName, value: String) {
-        rp.setString(field, value)
+    fun setValue(column: ColumnName, value: Constant) {
+        rp.setValue(column, value)
     }
 
     fun delete() {
@@ -93,4 +90,16 @@ class RecordFile(private val ti: TableInfo, private val tx: Transaction) : Close
 inline fun RecordFile.forEach(func: () -> Unit) {
     while (next())
         func()
+}
+
+fun RecordFile.getInt(column: ColumnName) =
+    (getValue(column, SqlType.INTEGER) as IntConstant).value
+
+fun RecordFile.getString(column: ColumnName) =
+    (getValue(column, SqlType.VARCHAR) as StringConstant).value
+
+fun RecordFile.insertRow(vararg values: Pair<ColumnName, Constant>) {
+    insert()
+    for ((column, value) in values)
+        setValue(column, value)
 }

@@ -12,7 +12,7 @@ class Term(private val lhs: Expression, private val rhs: Expression) {
             plan.distinctValues(lhs.fieldName)
         rhs is FieldNameExpression ->
             plan.distinctValues(rhs.fieldName)
-        lhs.asConstant() == rhs.asConstant() ->
+        lhs is ConstantExpression && rhs is ConstantExpression && lhs.value == rhs.value ->
             1
         else ->
             Integer.MAX_VALUE

@@ -4,6 +4,7 @@ import dev.komu.ahwen.metadata.TableManager.Companion.COL_TABLE_NAME
 import dev.komu.ahwen.metadata.TableManager.Companion.TBL_TABLE_CAT
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.record.forEach
+import dev.komu.ahwen.record.getString
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.TableName
 import java.util.concurrent.locks.ReentrantLock

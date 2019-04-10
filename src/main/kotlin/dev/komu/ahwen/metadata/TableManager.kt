@@ -1,8 +1,8 @@
 package dev.komu.ahwen.metadata
 
-import dev.komu.ahwen.record.Schema
-import dev.komu.ahwen.record.TableInfo
-import dev.komu.ahwen.record.forEach
+import dev.komu.ahwen.query.IntConstant
+import dev.komu.ahwen.query.StringConstant
+import dev.komu.ahwen.record.*
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.ColumnName
 import dev.komu.ahwen.types.SqlType
@@ -39,21 +39,23 @@ class TableManager(isNew: Boolean, tx: Transaction) {
 
         // insert one record into tblcat
         tableCatalogInfo.open(tx).use { tcatFile ->
-            tcatFile.insert()
-            tcatFile.setString(COL_TABLE_NAME, tableName.value)
-            tcatFile.setInt(COL_REC_LENGTH, ti.recordLength)
+            tcatFile.insertRow(
+                COL_TABLE_NAME to StringConstant(tableName.value),
+                COL_REC_LENGTH to IntConstant(ti.recordLength)
+            )
         }
 
         // insert a record into fldcat for each field
         fieldCatalogInfo.open(tx).use { fcat ->
             for (column in schema.columns) {
                 val info = schema[column]
-                fcat.insert()
-                fcat.setString(COL_TABLE_NAME, tableName.value)
-                fcat.setString(COL_FIELD_NAME, column.value)
-                fcat.setInt(COL_TYPE, info.type.code)
-                fcat.setInt(COL_LENGTH, info.length)
-                fcat.setInt(COL_OFFSET, ti.offset(column))
+                fcat.insertRow(
+                    COL_TABLE_NAME to StringConstant(tableName.value),
+                    COL_FIELD_NAME to StringConstant(column.value),
+                    COL_TYPE to IntConstant(info.type.code),
+                    COL_LENGTH to IntConstant(info.length),
+                    COL_OFFSET to IntConstant(ti.offset(column))
+                )
             }
         }
     }
@@ -104,7 +106,7 @@ class TableManager(isNew: Boolean, tx: Transaction) {
         private val COL_REC_LENGTH = ColumnName("reclength")
 
         fun checkNameLength(name: String, column: ColumnName) {
-            require(name.length <= MAX_NAME) { "max name length is $MAX_NAME, but $column '$name' is '${name.length}"}
+            require(name.length <= MAX_NAME) { "max name length is $MAX_NAME, but $column '$name' is '${name.length}" }
         }
     }
 }

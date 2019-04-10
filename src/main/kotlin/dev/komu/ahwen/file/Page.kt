@@ -7,6 +7,8 @@ import dev.komu.ahwen.query.Constant
 import dev.komu.ahwen.query.IntConstant
 import dev.komu.ahwen.query.StringConstant
 import dev.komu.ahwen.types.FileName
+import dev.komu.ahwen.types.SqlType
+import dev.komu.ahwen.types.SqlType.*
 import java.nio.ByteBuffer
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -40,49 +42,26 @@ class Page(private val fileManager: FileManager) {
         }
     }
 
-    fun getInt(offset: Int): Int {
-        lock.withLock {
-            contents.position(offset)
-            return contents.getInt()
-        }
-    }
-
     operator fun set(offset: Int, value: Constant) {
         lock.withLock {
+            contents.position(offset)
             when (value) {
-                is IntConstant -> setInt(offset, value.value)
-                is StringConstant -> setString(offset, value.value)
+                is IntConstant ->
+                    contents.putInt(value.value)
+                is StringConstant ->
+                    contents.writeString(value.value)
             }
         }
     }
 
-    fun setInt(offset: Int, value: Int) {
+    fun getValue(offset: Int, type: SqlType): Constant =
         lock.withLock {
             contents.position(offset)
-            contents.putInt(value)
+            when (type) {
+                INTEGER -> IntConstant(contents.getInt())
+                VARCHAR -> StringConstant(contents.readString())
+            }
         }
-    }
-
-    fun getString(offset: Int): String {
-        lock.withLock {
-            contents.position(offset)
-            val len = contents.getInt()
-            val bytes = ByteArray(len)
-
-            contents.get(bytes)
-            return String(bytes, charset)
-        }
-    }
-
-    fun setString(offset: Int, value: String) {
-        lock.withLock {
-            val bytes = value.toByteArray(charset)
-
-            contents.position(offset)
-            contents.putInt(bytes.size)
-            contents.put(bytes)
-        }
-    }
 
     companion object {
 
@@ -108,5 +87,28 @@ class Page(private val fileManager: FileManager) {
          */
         fun strSize(len: Int): Int =
             INT_SIZE + (len * bytesPerChar)
+
+        private fun ByteBuffer.readString(): String {
+            val len = getInt()
+            val bytes = ByteArray(len)
+
+            get(bytes)
+            return String(bytes, charset)
+        }
+
+        private fun ByteBuffer.writeString(value: String) {
+            val bytes = value.toByteArray(charset)
+
+            putInt(bytes.size)
+            put(bytes)
+        }
     }
 }
+
+fun Page.getInt(offset: Int): Int =
+    (getValue(offset, SqlType.INTEGER) as IntConstant).value
+
+operator fun Page.set(offset: Int, value: Int) {
+    this[offset] = IntConstant(value)
+}
+

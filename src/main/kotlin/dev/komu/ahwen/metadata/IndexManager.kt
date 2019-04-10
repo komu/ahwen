@@ -1,9 +1,8 @@
 package dev.komu.ahwen.metadata
 
 import dev.komu.ahwen.metadata.TableManager.Companion.MAX_NAME
-import dev.komu.ahwen.record.Schema
-import dev.komu.ahwen.record.TableInfo
-import dev.komu.ahwen.record.forEach
+import dev.komu.ahwen.query.StringConstant
+import dev.komu.ahwen.record.*
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.ColumnName
 import dev.komu.ahwen.types.IndexName
@@ -38,10 +37,11 @@ class IndexManager(
         TableManager.checkNameLength(fieldName.value, COL_FIELD_NAME)
 
         ti.open(tx).use { rf ->
-            rf.insert()
-            rf.setString(COL_INDEX_NAME, indexName.value)
-            rf.setString(COL_TABLE_NAME, tableName.value)
-            rf.setString(COL_FIELD_NAME, fieldName.value)
+            rf.insertRow(
+                COL_INDEX_NAME to StringConstant(indexName.value),
+                COL_TABLE_NAME to StringConstant(tableName.value),
+                COL_FIELD_NAME to StringConstant(fieldName.value)
+            )
         }
     }
 

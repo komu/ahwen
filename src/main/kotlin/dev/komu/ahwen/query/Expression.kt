@@ -5,12 +5,6 @@ import dev.komu.ahwen.types.ColumnName
 
 sealed class Expression {
 
-    fun asConstant(): Constant =
-        (this as ConstantExpression).value
-
-    fun asFieldName(): ColumnName =
-        (this as FieldNameExpression).fieldName
-
     abstract fun evaluate(scan: Scan): Constant
     abstract fun appliesTo(schema: Schema): Boolean
     abstract override fun toString(): String

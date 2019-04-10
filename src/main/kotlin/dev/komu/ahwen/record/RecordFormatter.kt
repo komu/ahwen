@@ -3,6 +3,7 @@ package dev.komu.ahwen.record
 import dev.komu.ahwen.buffer.PageFormatter
 import dev.komu.ahwen.file.Page
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
+import dev.komu.ahwen.file.set
 
 /**
  * [PageFormatter] that initializes the page with empty records of type [ti].
@@ -14,7 +15,7 @@ class RecordFormatter(private val ti: TableInfo) : PageFormatter {
 
         var pos = 0
         while (pos + recSize <= BLOCK_SIZE) {
-            page.setInt(pos, RecordPage.EMPTY)
+            page[pos] = RecordPage.EMPTY
             makeDefaultRecord(page, pos)
             pos += recSize
         }

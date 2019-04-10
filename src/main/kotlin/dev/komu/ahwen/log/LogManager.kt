@@ -1,11 +1,10 @@
 package dev.komu.ahwen.log
 
-import dev.komu.ahwen.file.Block
-import dev.komu.ahwen.file.FileManager
-import dev.komu.ahwen.file.Page
+import dev.komu.ahwen.file.*
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
 import dev.komu.ahwen.file.Page.Companion.INT_SIZE
-import dev.komu.ahwen.file.Page.Companion.strSize
+import dev.komu.ahwen.query.IntConstant
+import dev.komu.ahwen.query.StringConstant
 import dev.komu.ahwen.tx.TxNum
 import dev.komu.ahwen.types.FileName
 import java.util.concurrent.locks.ReentrantLock
@@ -74,16 +73,19 @@ class LogManager(
      * are currently supported.
      */
     fun append(vararg values: Any): LSN {
+        val constants = values.map { convertValue(it) }
         lock.withLock {
-            val recordSize = INT_SIZE + values.sumBy { it.size }
+            val recordSize = INT_SIZE + constants.sumBy { it.representationSize }
 
             if (currentPos + recordSize >= BLOCK_SIZE) {
                 flush()
                 appendNewBlock()
             }
 
-            for (value in values)
-                appendValue(value)
+            for (value in constants) {
+                lastPage[currentPos] = value
+                currentPos += value.representationSize
+            }
 
             finalizeRecord()
 
@@ -114,35 +116,6 @@ class LogManager(
     private val currentLSN: LSN
         get() = LSN(currentBlock.number)
 
-    private fun appendValue(value: Any) {
-        when (value) {
-            is String ->
-                lastPage.setString(currentPos, value)
-            is TxNum ->
-                lastPage.setInt(currentPos, value.txnum)
-            is Int ->
-                lastPage.setInt(currentPos, value)
-            is FileName ->
-                lastPage.setString(currentPos, value.value)
-            else ->
-                error("unexpected value $value of type ${value.javaClass}")
-        }
-
-        currentPos += value.size
-    }
-
-    private val Any.size: Int
-        get() = when (this) {
-            is String ->
-                strSize(length)
-            is FileName ->
-                strSize(value.length)
-            is Int, is TxNum ->
-                INT_SIZE
-            else ->
-                error("unexpected value $this of type $javaClass")
-        }
-
     private fun flush() {
         lastPage.write(currentBlock)
     }
@@ -155,7 +128,7 @@ class LogManager(
 
     private fun finalizeRecord() {
         val lastPos = lastRecordPosition
-        lastPage.setInt(currentPos, lastPos)
+        lastPage[currentPos] = lastPos
         lastRecordPosition = currentPos
         currentPos += INT_SIZE
     }
@@ -163,7 +136,7 @@ class LogManager(
     private var lastRecordPosition: Int
         get() = lastPage.getInt(LAST_POS_OFFSET)
         set(value) {
-            lastPage.setInt(LAST_POS_OFFSET, value)
+            lastPage[LAST_POS_OFFSET] = value
         }
 
     private class LogIterator(fileManager: FileManager, private var block: Block) : Iterator<BasicLogRecord> {
@@ -197,5 +170,18 @@ class LogManager(
 
         /** The offset within block where the position of last block is stored */
         private const val LAST_POS_OFFSET = 0
+
+        private fun convertValue(value: Any) = when (value) {
+            is String ->
+                StringConstant(value)
+            is TxNum ->
+                IntConstant(value.txnum)
+            is Int ->
+                IntConstant(value)
+            is FileName ->
+                StringConstant(value.value)
+            else ->
+                error("unexpected value $value of type ${value.javaClass}")
+        }
     }
 }

@@ -1,8 +1,8 @@
 package dev.komu.ahwen.metadata
 
 import dev.komu.ahwen.metadata.TableManager.Companion.checkNameLength
-import dev.komu.ahwen.record.Schema
-import dev.komu.ahwen.record.forEach
+import dev.komu.ahwen.query.StringConstant
+import dev.komu.ahwen.record.*
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.ColumnName
 import dev.komu.ahwen.types.TableName
@@ -25,9 +25,10 @@ class ViewManager(isNew: Boolean, private val tableManager: TableManager, tx: Tr
     fun createView(name: TableName, def: String, tx: Transaction) {
         checkNameLength(name.value, COL_VIEW_NAME)
         tableManager.getTableInfo(TBL_VIEW_CAT, tx).open(tx).use { rf ->
-            rf.insert()
-            rf.setString(COL_VIEW_NAME, name.value)
-            rf.setString(COL_VIEW_DEF, def)
+            rf.insertRow(
+                COL_VIEW_NAME to StringConstant(name.value),
+                COL_VIEW_DEF to StringConstant(def)
+            )
         }
     }
 

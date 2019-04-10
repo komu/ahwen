@@ -41,10 +41,8 @@ class ChunkScan(
         }
     }
 
-    override fun get(column: ColumnName): Constant = when (schema.type(column)) {
-        INTEGER -> IntConstant(rp.getInt(column))
-        VARCHAR -> StringConstant(rp.getString(column))
-    }
+    override fun get(column: ColumnName): Constant =
+        rp.getValue(column, schema.type(column))
 
     override fun contains(column: ColumnName): Boolean =
         column in schema

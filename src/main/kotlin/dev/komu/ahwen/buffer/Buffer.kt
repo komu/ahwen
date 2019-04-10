@@ -8,6 +8,7 @@ import dev.komu.ahwen.log.LogManager
 import dev.komu.ahwen.query.Constant
 import dev.komu.ahwen.tx.TxNum
 import dev.komu.ahwen.types.FileName
+import dev.komu.ahwen.types.SqlType
 
 /**
  * Buffer is reusable [Page] of data that can be _pinned_ to a certain [Block].
@@ -40,11 +41,8 @@ class Buffer(fileManager: FileManager, private val logManager: LogManager) {
     private var modifiedBy: TxNum? = null
     private var logSequenceNumber = LSN.zero
 
-    fun getInt(offset: Int): Int =
-        contents.getInt(offset)
-
-    fun getString(offset: Int): String =
-        contents.getString(offset)
+    fun getValue(offset: Int, type: SqlType): Constant =
+        contents.getValue(offset, type)
 
     fun setValue(offset: Int, value: Constant, txnum: TxNum, lsn: LSN) {
         modifiedBy = txnum

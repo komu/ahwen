@@ -3,6 +3,7 @@ package dev.komu.ahwen.index.btree
 import dev.komu.ahwen.buffer.PageFormatter
 import dev.komu.ahwen.file.Page
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
+import dev.komu.ahwen.file.set
 import dev.komu.ahwen.record.TableInfo
 
 class BTreePageFormatter(
@@ -12,8 +13,8 @@ class BTreePageFormatter(
     PageFormatter {
 
     override fun format(page: Page) {
-        page.setInt(0, flag)
-        page.setInt(Int.SIZE_BYTES, 0)
+        page[0] = flag
+        page[Int.SIZE_BYTES] = 0
         val recordSize = ti.recordLength
 
         var pos = 2 * Int.SIZE_BYTES

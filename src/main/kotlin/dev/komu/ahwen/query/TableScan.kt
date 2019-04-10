@@ -23,18 +23,14 @@ class TableScan(ti: TableInfo, tx: Transaction) : UpdateScan {
         rf.close()
     }
 
-    override fun get(column: ColumnName) = when (schema.type(column)) {
-        INTEGER -> IntConstant(rf.getInt(column))
-        VARCHAR -> StringConstant(rf.getString(column))
-    }
+    override fun get(column: ColumnName) =
+        rf.getValue(column, schema.type(column))
 
     override fun contains(column: ColumnName): Boolean =
         column in schema
 
-    override fun set(column: ColumnName, value: Constant) = when (schema.type(column)) {
-        INTEGER -> rf.setInt(column, value.value as Int)
-        VARCHAR -> rf.setString(column, value.value as String)
-    }
+    override fun set(column: ColumnName, value: Constant) =
+        rf.setValue(column, value)
 
     override fun delete() {
         rf.delete()

@@ -6,6 +6,9 @@ import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.log.BasicLogRecord
 import dev.komu.ahwen.log.LSN
 import dev.komu.ahwen.log.LogManager
+import dev.komu.ahwen.query.Constant
+import dev.komu.ahwen.query.IntConstant
+import dev.komu.ahwen.query.StringConstant
 import dev.komu.ahwen.tx.TxNum
 
 /**
@@ -87,26 +90,20 @@ class RecoveryManager(
         logManager.flush(lsn)
     }
 
-    fun setInt(buffer: Buffer, offset: Int, @Suppress("UNUSED_PARAMETER") newValue: Int): LSN {
-        val oldValue = buffer.getInt(offset)
+    fun setValue(buffer: Buffer, offset: Int, newValue: Constant): LSN {
+        val oldValue = buffer.getValue(offset, newValue.type)
         val block = buffer.block ?: error("no block for buffer")
         return if (isTemporaryBlock(block)) {
             LSN.undefined
         } else {
-            val record = SetIntRecord(txnum, block, offset, oldValue)
+            val record = createUndoRecord(block, offset, oldValue)
             record.writeToLog(logManager)
         }
     }
 
-    fun setString(buffer: Buffer, offset: Int, @Suppress("UNUSED_PARAMETER") newValue: String): LSN {
-        val oldValue = buffer.getString(offset)
-        val block = buffer.block ?: error("no block for buffer")
-        return if (isTemporaryBlock(block)) {
-            LSN.undefined
-        } else {
-            val record = SetStringRecord(txnum, block, offset, oldValue)
-            record.writeToLog(logManager)
-        }
+    private fun createUndoRecord(block: Block, offset: Int, oldValue: Constant): LogRecord = when (oldValue) {
+        is IntConstant -> SetIntRecord(txnum, block, offset, oldValue.value)
+        is StringConstant -> SetStringRecord(txnum, block, offset, oldValue.value)
     }
 
     private fun doRollback() {

@@ -7,18 +7,18 @@ import dev.komu.ahwen.query.IntConstant
 import dev.komu.ahwen.query.StringConstant
 import dev.komu.ahwen.record.RID
 import dev.komu.ahwen.record.TableInfo
-import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.tx.*
 import dev.komu.ahwen.types.ColumnName
 import dev.komu.ahwen.types.SqlType
 
 class BTreePage(
-    currentBlock: Block,
+    private var currentBlock: Block,
     private val ti: TableInfo,
     private val tx: Transaction
 ) {
 
-    private var currentBlock: Block? = currentBlock
     private val slotSize = ti.recordLength
+    private var closed = false
 
     init {
         tx.pin(currentBlock)
@@ -32,9 +32,10 @@ class BTreePage(
     }
 
     fun close() {
-        if (currentBlock != null) {
-            tx.unpin(currentBlock!!)
-            currentBlock = null
+        // TODO: do we really need to guard against closing multiple times?
+        if (!closed) {
+            tx.unpin(currentBlock)
+            closed = true
         }
     }
 
@@ -54,18 +55,18 @@ class BTreePage(
         getValue(slot, COL_DATAVAL)
 
     var flag: Int
-        get() = tx.getInt(currentBlock!!, 0)
+        get() = tx.getInt(currentBlock, 0)
         set(value) {
-            tx.setInt(currentBlock!!, 0, value)
+            tx.setInt(currentBlock, 0, value)
         }
 
     private fun appendNew(flag: Int): Block =
         tx.append(ti.fileName, BTreePageFormatter(ti, flag))
 
     var numRecs: Int
-        get() = tx.getInt(currentBlock!!, Int.SIZE_BYTES)
+        get() = tx.getInt(currentBlock, Int.SIZE_BYTES)
         private set(newValue) {
-            tx.setInt(currentBlock!!, Int.SIZE_BYTES, newValue)
+            tx.setInt(currentBlock, Int.SIZE_BYTES, newValue)
         }
 
     // Methods called only by BTreeDir
@@ -99,39 +100,22 @@ class BTreePage(
 
     // Private methods
 
-    private fun getInt(slot: Int, fieldName: ColumnName): Int {
-        val pos = fieldPos(slot, fieldName)
-        return tx.getInt(currentBlock!!, pos)
-    }
-
-    private fun getString(slot: Int, fieldName: ColumnName): String {
-        val pos = fieldPos(slot, fieldName)
-        return tx.getString(currentBlock!!, pos)
-    }
-
     private fun getValue(slot: Int, fieldName: ColumnName): Constant {
-        val type = ti.schema.type(fieldName)
-        return when (type) {
-            SqlType.INTEGER -> IntConstant(getInt(slot, fieldName))
-            SqlType.VARCHAR -> StringConstant(getString(slot, fieldName))
-        }
-    }
-
-    private fun setInt(slot: Int, fieldName: ColumnName, value: Int) {
         val pos = fieldPos(slot, fieldName)
-        tx.setInt(currentBlock!!, pos, value)
-    }
-
-    private fun setString(slot: Int, fieldName: ColumnName, value: String) {
-        val pos = fieldPos(slot, fieldName)
-        tx.setString(currentBlock!!, pos, value)
+        return tx.getValue(currentBlock, pos, ti.schema.type(fieldName))
     }
 
     private fun setValue(slot: Int, fieldName: ColumnName, value: Constant) {
-        when (ti.schema.type(fieldName)) {
-            SqlType.INTEGER -> setInt(slot, fieldName, value.value as Int)
-            SqlType.VARCHAR -> setString(slot, fieldName, value.value as String)
-        }
+        assert(value.type == ti.schema.type(fieldName))
+        val pos = fieldPos(slot, fieldName)
+        tx.setValue(currentBlock, pos, value)
+    }
+
+    private fun getInt(slot: Int, fieldName: ColumnName): Int =
+        (getValue(slot, fieldName) as IntConstant).value
+
+    private fun setInt(slot: Int, fieldName: ColumnName, value: Int) {
+        setValue(slot, fieldName, IntConstant(value))
     }
 
     private fun insert(slot: Int) {

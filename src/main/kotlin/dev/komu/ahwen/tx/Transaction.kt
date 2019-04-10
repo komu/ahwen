@@ -5,12 +5,14 @@ import dev.komu.ahwen.buffer.PageFormatter
 import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.file.FileManager
 import dev.komu.ahwen.log.LogManager
+import dev.komu.ahwen.query.Constant
 import dev.komu.ahwen.query.IntConstant
 import dev.komu.ahwen.query.StringConstant
 import dev.komu.ahwen.tx.concurrency.ConcurrencyManager
 import dev.komu.ahwen.tx.concurrency.LockTable
 import dev.komu.ahwen.tx.recovery.RecoveryManager
 import dev.komu.ahwen.types.FileName
+import dev.komu.ahwen.types.SqlType
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -58,30 +60,17 @@ class Transaction(logManager: LogManager, bufferManager: BufferManager, lockTabl
         myBuffers.unpin(block)
     }
 
-    fun getInt(block: Block, offset: Int): Int {
+    fun getValue(block: Block, offset: Int, type: SqlType): Constant {
         concurrencyManager.sLock(block)
         val buffer = myBuffers.getBuffer(block)
-        return buffer.getInt(offset)
+        return buffer.getValue(offset, type)
     }
 
-    fun getString(block: Block, offset: Int): String {
-        concurrencyManager.sLock(block)
-        val buffer = myBuffers.getBuffer(block)
-        return buffer.getString(offset)
-    }
-
-    fun setInt(block: Block, offset: Int, value: Int) {
+    fun setValue(block: Block, offset: Int, value: Constant) {
         concurrencyManager.xLock(block)
         val buffer = myBuffers.getBuffer(block)
-        val lsn = recoveryManager.setInt(buffer, offset, value)
-        buffer.setValue(offset, IntConstant(value), txnum, lsn)
-    }
-
-    fun setString(block: Block, offset: Int, value: String) {
-        concurrencyManager.xLock(block)
-        val buffer = myBuffers.getBuffer(block)
-        val lsn = recoveryManager.setString(buffer, offset, value)
-        buffer.setValue(offset, StringConstant(value), txnum, lsn)
+        val lsn = recoveryManager.setValue(buffer, offset, value)
+        buffer.setValue(offset, value, txnum, lsn)
     }
 
     fun size(fileName: FileName): Int {
@@ -105,4 +94,11 @@ class Transaction(logManager: LogManager, bufferManager: BufferManager, lockTabl
          */
         private fun eofBlock(fileName: FileName) = Block(fileName, -1)
     }
+}
+
+fun Transaction.getInt(block: Block, offset: Int): Int =
+    (getValue(block, offset, SqlType.INTEGER) as IntConstant).value
+
+fun Transaction.setInt(block: Block, offset: Int, value: Int) {
+    setValue(block, offset, IntConstant(value))
 }

@@ -2,8 +2,10 @@ package dev.komu.ahwen.record
 
 import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
-import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.query.Constant
+import dev.komu.ahwen.tx.*
 import dev.komu.ahwen.types.ColumnName
+import dev.komu.ahwen.types.SqlType
 
 /**
  * A cursor for reading records described by [ti] from a block.
@@ -28,18 +30,11 @@ class RecordPage(
 
     fun next() = searchFor(IN_USE)
 
-    fun getInt(fieldName: ColumnName): Int =
-        tx.getInt(block, fieldPos(fieldName))
+    fun getValue(column: ColumnName, type: SqlType) =
+        tx.getValue(block, columnPosition(column), type)
 
-    fun getString(fieldName: ColumnName): String =
-        tx.getString(block, fieldPos(fieldName))
-
-    fun setInt(fieldName: ColumnName, value: Int) {
-        tx.setInt(block, fieldPos(fieldName), value)
-    }
-
-    fun setString(fieldName: ColumnName, value: String) {
-        tx.setString(block, fieldPos(fieldName), value)
+    fun setValue(column: ColumnName, value: Constant) {
+        tx.setValue(block, columnPosition(column), value)
     }
 
     fun delete() {
@@ -61,7 +56,7 @@ class RecordPage(
     private val currentPos: Int
         get() = currentId * slotSize
 
-    private fun fieldPos(name: ColumnName): Int {
+    private fun columnPosition(name: ColumnName): Int {
         val offset = Int.SIZE_BYTES + ti.offset(name)
         return currentPos + offset
     }

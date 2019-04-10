@@ -1,7 +1,10 @@
 package dev.komu.ahwen.log
 
 import dev.komu.ahwen.file.Page
-import dev.komu.ahwen.file.Page.Companion.strSize
+import dev.komu.ahwen.query.Constant
+import dev.komu.ahwen.query.IntConstant
+import dev.komu.ahwen.query.StringConstant
+import dev.komu.ahwen.types.SqlType
 
 /**
  * Provides unstructured low-level read access to log records.
@@ -10,15 +13,15 @@ import dev.komu.ahwen.file.Page.Companion.strSize
  */
 class BasicLogRecord(private val page: Page, private var pos: Int) {
 
-    fun nextInt(): Int {
-        val result = page.getInt(pos)
-        pos += Int.SIZE_BYTES
-        return result
-    }
+    fun nextInt(): Int =
+        (nextValue(SqlType.INTEGER) as IntConstant).value
 
-    fun nextString(): String {
-        val result = page.getString(pos)
-        pos += strSize(result.length)
+    fun nextString(): String =
+        (nextValue(SqlType.VARCHAR) as StringConstant).value
+
+    private fun nextValue(type: SqlType): Constant {
+        val result = page.getValue(pos, type)
+        pos += result.representationSize
         return result
     }
 }
