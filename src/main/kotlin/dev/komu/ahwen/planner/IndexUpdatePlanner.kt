@@ -7,6 +7,9 @@ import dev.komu.ahwen.query.TablePlan
 import dev.komu.ahwen.query.forEach
 import dev.komu.ahwen.tx.Transaction
 
+/**
+ * [UpdatePlanner] that also keeps the indices in sync.
+ */
 class IndexUpdatePlanner(private val metadataManager: MetadataManager) : UpdatePlanner {
 
     override fun executeInsert(data: InsertData, tx: Transaction): Int {

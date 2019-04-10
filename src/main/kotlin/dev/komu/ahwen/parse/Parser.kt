@@ -63,7 +63,17 @@ class Parser(query: String) {
             Predicate()
         }
 
-        return QueryData(fields, tables, predicate)
+        val orderBy = if (lex.matchKeyword("order")) {
+            lex.eatKeyword("order")
+            lex.eatKeyword("by")
+            selectList()
+        } else {
+            emptyList()
+        }
+
+        lex.assertEnd()
+
+        return QueryData(fields, tables, predicate, orderBy)
     }
 
     private fun selectList(): List<ColumnName> {
@@ -87,15 +97,19 @@ class Parser(query: String) {
     }
 
     // Methods for parsing update commands
-    fun updateCmd(): CommandData = when {
-        lex.matchKeyword("insert") ->
-            insert()
-        lex.matchKeyword("delete") ->
-            delete()
-        lex.matchKeyword("update") ->
-            modify()
-        else ->
-            create()
+    fun updateCmd(): CommandData {
+        val command = when {
+            lex.matchKeyword("insert") ->
+                insert()
+            lex.matchKeyword("delete") ->
+                delete()
+            lex.matchKeyword("update") ->
+                modify()
+            else ->
+                create()
+        }
+        lex.assertEnd()
+        return command
     }
 
     private fun create(): CommandData {
@@ -107,7 +121,7 @@ class Parser(query: String) {
         }
     }
 
-    fun delete(): DeleteData {
+    private fun delete(): DeleteData {
         lex.eatKeyword("delete")
         lex.eatKeyword("from")
         val table = tableName()
@@ -120,7 +134,7 @@ class Parser(query: String) {
         return DeleteData(table, predicate)
     }
 
-    fun insert(): InsertData {
+    private fun insert(): InsertData {
         lex.eatKeyword("insert")
         lex.eatKeyword("into")
         val table = tableName()

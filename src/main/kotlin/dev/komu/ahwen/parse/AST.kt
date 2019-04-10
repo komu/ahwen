@@ -1,8 +1,8 @@
 package dev.komu.ahwen.parse
 
-import dev.komu.ahwen.query.SqlValue
 import dev.komu.ahwen.query.Expression
 import dev.komu.ahwen.query.Predicate
+import dev.komu.ahwen.query.SqlValue
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.types.ColumnName
 import dev.komu.ahwen.types.IndexName
@@ -16,7 +16,12 @@ class DeleteData(val table: TableName, val predicate: Predicate) : CommandData()
 
 class ModifyData(val table: TableName, val fieldName: ColumnName, val newValue: Expression, val predicate: Predicate) : CommandData()
 
-class QueryData(val fields: List<ColumnName>, val tables: List<TableName>, val predicate: Predicate) {
+class QueryData(
+    val fields: List<ColumnName>,
+    val tables: List<TableName>,
+    val predicate: Predicate,
+    val orderBy: List<ColumnName>
+    ) {
     override fun toString(): String = buildString {
         append("select ")
         fields.joinTo(this, separator = ", ")
@@ -26,6 +31,11 @@ class QueryData(val fields: List<ColumnName>, val tables: List<TableName>, val p
         val predString = predicate.toString()
         if (predString.isNotEmpty())
             append(" where ").append(predString)
+
+        if (orderBy.isNotEmpty()) {
+            append(" order by ")
+            orderBy.joinTo(this, separator = ", ")
+        }
     }
 }
 

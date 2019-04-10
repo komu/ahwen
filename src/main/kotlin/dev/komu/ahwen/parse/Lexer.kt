@@ -16,7 +16,7 @@ class Lexer(s: String) {
     fun matchDelim(d: Char) =
         d == tok.ttype.toChar()
 
-    fun matchIntConstant() =
+    private fun matchIntConstant() =
         tok.ttype == StreamTokenizer.TT_NUMBER
 
     fun matchStringConstant() =
@@ -71,6 +71,12 @@ class Lexer(s: String) {
         } catch (e: IOException) {
             throw BadSyntaxException("unexpected eof")
         }
+    }
+
+    fun assertEnd() {
+        tok.nextToken()
+        if (tok.ttype != StreamTokenizer.TT_EOF)
+            throw BadSyntaxException("expected eof")
     }
 
     companion object {

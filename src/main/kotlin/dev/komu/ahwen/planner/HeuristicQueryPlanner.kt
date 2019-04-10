@@ -5,6 +5,7 @@ import dev.komu.ahwen.metadata.MetadataManager
 import dev.komu.ahwen.parse.QueryData
 import dev.komu.ahwen.query.Plan
 import dev.komu.ahwen.query.ProjectPlan
+import dev.komu.ahwen.query.materialize.SortPlan
 import dev.komu.ahwen.tx.Transaction
 
 /**
@@ -28,6 +29,9 @@ class HeuristicQueryPlanner(
 
         while (!tablePlanners.isEmpty())
             currentPlan = tablePlanners.getLowestJoinPlan(currentPlan) ?: tablePlanners.getLowestProductPlan(currentPlan)
+
+        if (data.orderBy.isNotEmpty())
+            currentPlan = SortPlan(currentPlan, data.orderBy, tx)
 
         return ProjectPlan(currentPlan, data.fields)
     }

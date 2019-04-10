@@ -6,9 +6,11 @@ import dev.komu.ahwen.parse.*
 import dev.komu.ahwen.query.Plan
 import dev.komu.ahwen.tx.Transaction
 
+/**
+ * Facade for query planning.
+ */
 class Planner(metadataManager: MetadataManager, bufferManager: BufferManager) {
 
-//    private val queryPlanner = BasicQueryPlanner(this, metadataManager)
     private val queryPlanner = HeuristicQueryPlanner(metadataManager, bufferManager)
     private val updatePlanner = IndexUpdatePlanner(metadataManager)
 
