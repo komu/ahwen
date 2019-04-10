@@ -3,6 +3,9 @@ package dev.komu.ahwen.query
 import dev.komu.ahwen.record.RID
 import dev.komu.ahwen.types.ColumnName
 
+/**
+ * Runtime implementation of [SelectPlan].
+ */
 class SelectScan(private val scan: Scan, private val predicate: Predicate) : Scan, UpdateScan {
 
     override fun next(): Boolean {
@@ -20,13 +23,13 @@ class SelectScan(private val scan: Scan, private val predicate: Predicate) : Sca
         scan.close()
     }
 
-    override fun get(column: ColumnName): Constant =
+    override fun get(column: ColumnName): SqlValue =
         scan[column]
 
     override fun contains(column: ColumnName): Boolean =
         column in scan
 
-    override fun set(column: ColumnName, value: Constant) {
+    override fun set(column: ColumnName, value: SqlValue) {
         val us = scan as UpdateScan
         us[column] = value
     }

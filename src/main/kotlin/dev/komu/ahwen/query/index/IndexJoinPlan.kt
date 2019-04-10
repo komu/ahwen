@@ -1,4 +1,4 @@
-package dev.komu.ahwen.index.query
+package dev.komu.ahwen.query.index
 
 import dev.komu.ahwen.metadata.IndexInfo
 import dev.komu.ahwen.query.Plan
@@ -6,6 +6,9 @@ import dev.komu.ahwen.query.Scan
 import dev.komu.ahwen.query.TablePlan
 import dev.komu.ahwen.types.ColumnName
 
+/**
+ * Joins plan with a table using index for finding matching rows.
+ */
 class IndexJoinPlan(
     private val p1: Plan,
     private val p2: TablePlan,

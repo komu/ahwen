@@ -1,10 +1,10 @@
 package dev.komu.ahwen.jdbc
 
-import dev.komu.ahwen.query.Constant
+import dev.komu.ahwen.query.SqlValue
 import dev.komu.ahwen.utils.unimplemented
 import java.sql.ResultSet
 
-class AhwenResultSet(private val rows: MutableList<Map<String, Constant>>) : ResultSet by unimplemented() {
+class AhwenResultSet(private val rows: MutableList<Map<String, SqlValue>>) : ResultSet by unimplemented() {
 
     private var index = -1
 

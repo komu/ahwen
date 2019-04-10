@@ -6,6 +6,9 @@ import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
 import dev.komu.ahwen.file.set
 import dev.komu.ahwen.record.TableInfo
 
+/**
+ * Formats an empty page ready to be used for a B Tree Index.
+ */
 class BTreePageFormatter(
     private val ti: TableInfo,
     private val flag: Int

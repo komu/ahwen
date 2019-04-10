@@ -1,15 +1,18 @@
 package dev.komu.ahwen.index.btree
 
 import dev.komu.ahwen.file.Block
-import dev.komu.ahwen.query.Constant
+import dev.komu.ahwen.query.SqlValue
 import dev.komu.ahwen.record.RID
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction
 
+/**
+ * Represents a leaf node of a B-Tree.
+ */
 class BTreeLeaf(
     block: Block,
     private val ti: TableInfo,
-    private val searchKey: Constant,
+    private val searchKey: SqlValue,
     private val tx: Transaction
 ) {
 

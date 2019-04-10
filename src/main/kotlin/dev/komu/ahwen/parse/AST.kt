@@ -1,6 +1,6 @@
 package dev.komu.ahwen.parse
 
-import dev.komu.ahwen.query.Constant
+import dev.komu.ahwen.query.SqlValue
 import dev.komu.ahwen.query.Expression
 import dev.komu.ahwen.query.Predicate
 import dev.komu.ahwen.record.Schema
@@ -10,7 +10,7 @@ import dev.komu.ahwen.types.TableName
 
 sealed class CommandData
 
-class InsertData(val table: TableName, val fields: List<ColumnName>, val values: List<Constant>) : CommandData()
+class InsertData(val table: TableName, val fields: List<ColumnName>, val values: List<SqlValue>) : CommandData()
 
 class DeleteData(val table: TableName, val predicate: Predicate) : CommandData()
 

@@ -1,14 +1,19 @@
-package dev.komu.ahwen.index.query
+package dev.komu.ahwen.query.index
 
 import dev.komu.ahwen.index.Index
-import dev.komu.ahwen.query.Constant
+import dev.komu.ahwen.query.SqlValue
 import dev.komu.ahwen.query.Scan
 import dev.komu.ahwen.query.TableScan
+import dev.komu.ahwen.query.UpdateScan
+import dev.komu.ahwen.record.RID
 import dev.komu.ahwen.types.ColumnName
 
+/**
+ * Runtime implementation of [IndexSelectPlan].
+ */
 class IndexSelectScan(
     private val index: Index,
-    private val value: Constant,
+    private val value: SqlValue,
     private val tableScan: TableScan
 ) : Scan {
 
@@ -32,7 +37,7 @@ class IndexSelectScan(
         tableScan.close()
     }
 
-    override fun get(column: ColumnName): Constant =
+    override fun get(column: ColumnName): SqlValue =
         tableScan[column]
 
     override fun contains(column: ColumnName): Boolean =

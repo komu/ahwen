@@ -1,29 +1,45 @@
 package dev.komu.ahwen.types
 
-import dev.komu.ahwen.query.Constant
-import dev.komu.ahwen.query.IntConstant
-import dev.komu.ahwen.query.StringConstant
+import dev.komu.ahwen.file.Page.Companion.INT_SIZE
+import dev.komu.ahwen.query.SqlValue
+import dev.komu.ahwen.query.SqlInt
+import dev.komu.ahwen.query.SqlString
 import java.sql.Types
+import java.sql.Types.VARCHAR
+import java.time.chrono.JapaneseEra.values
 
-enum class SqlType(val code: Int) {
-    INTEGER(Types.INTEGER),
-    VARCHAR(Types.VARCHAR);
+sealed class SqlType(val code: Int) {
+    object INTEGER : SqlType(Types.INTEGER)
+    object VARCHAR : SqlType(Types.VARCHAR)
 
-    val defaultValue: Constant
+    /**
+     * Returns the maximum amount of bytes to store a type of given logical length.
+     */
+    fun maximumBytes(length: Int): Int = when (this) {
+        INTEGER -> INT_SIZE
+        VARCHAR -> INT_SIZE + (length * MAX_BYTES_PER_CHAR) // storage format: length + data
+    }
+
+    val defaultValue: SqlValue
         get() = when (this) {
-            INTEGER -> IntConstant(0)
-            VARCHAR -> StringConstant("")
+            INTEGER -> SqlInt(0)
+            VARCHAR -> SqlString("")
         }
 
-    val minimumValue: Constant
+    val minimumValue: SqlValue
         get() = when (this) {
-            INTEGER -> IntConstant(Int.MIN_VALUE)
-            VARCHAR -> StringConstant("")
+            INTEGER -> SqlInt(Int.MIN_VALUE)
+            VARCHAR -> SqlString("")
         }
 
     companion object {
 
-        operator fun invoke(code: Int) =
-            values().find { it.code == code } ?: error("invalid type-code: $code")
+        operator fun invoke(code: Int): SqlType = when (code) {
+            Types.INTEGER -> INTEGER
+            Types.VARCHAR -> VARCHAR
+            else -> error("invalid type-code: $code")
+        }
+
+        private val MAX_BYTES_PER_CHAR = SqlString.charset.newEncoder().maxBytesPerChar().toInt()
     }
 }

@@ -41,13 +41,5 @@ class TableInfo(
 
             return TableInfo(tableName, schema, offsets, pos)
         }
-
-        private fun Schema.lengthInBytes(column: ColumnName): Int {
-            val info = this[column]
-            return when (info.type) {
-                INTEGER -> Int.SIZE_BYTES
-                VARCHAR -> Int.SIZE_BYTES + info.length
-            }
-        }
     }
 }

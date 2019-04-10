@@ -3,8 +3,8 @@ package dev.komu.ahwen.log
 import dev.komu.ahwen.file.*
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
 import dev.komu.ahwen.file.Page.Companion.INT_SIZE
-import dev.komu.ahwen.query.IntConstant
-import dev.komu.ahwen.query.StringConstant
+import dev.komu.ahwen.query.SqlInt
+import dev.komu.ahwen.query.SqlString
 import dev.komu.ahwen.tx.TxNum
 import dev.komu.ahwen.types.FileName
 import java.util.concurrent.locks.ReentrantLock
@@ -173,13 +173,13 @@ class LogManager(
 
         private fun convertValue(value: Any) = when (value) {
             is String ->
-                StringConstant(value)
+                SqlString(value)
             is TxNum ->
-                IntConstant(value.txnum)
+                SqlInt(value.txnum)
             is Int ->
-                IntConstant(value)
+                SqlInt(value)
             is FileName ->
-                StringConstant(value.value)
+                SqlString(value.value)
             else ->
                 error("unexpected value $value of type ${value.javaClass}")
         }

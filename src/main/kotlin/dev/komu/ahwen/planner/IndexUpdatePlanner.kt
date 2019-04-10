@@ -21,11 +21,8 @@ class IndexUpdatePlanner(private val metadataManager: MetadataManager) : UpdateP
             for ((field, value) in data.fields.zip(data.values)) {
                 scan[field] = value
 
-                val indexInfo = indices[field]
-                if (indexInfo != null) {
-                    val index = indexInfo.open()
+                indices[field]?.open()?.use { index ->
                     index.insert(value, rid)
-                    index.close()
                 }
             }
         }
@@ -42,10 +39,9 @@ class IndexUpdatePlanner(private val metadataManager: MetadataManager) : UpdateP
                 val rid = scan.rid
 
                 for ((fieldName, indexInfo) in indices) {
-                    val value = scan[fieldName]
-                    val index = indexInfo.open()
-                    index.delete(value, rid)
-                    index.close()
+                    indexInfo.open().use { index ->
+                        index.delete(scan[fieldName], rid)
+                    }
                 }
                 scan.delete()
                 count++

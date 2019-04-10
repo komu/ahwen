@@ -5,7 +5,7 @@ import dev.komu.ahwen.file.FileManager
 import dev.komu.ahwen.file.Page
 import dev.komu.ahwen.log.LSN
 import dev.komu.ahwen.log.LogManager
-import dev.komu.ahwen.query.Constant
+import dev.komu.ahwen.query.SqlValue
 import dev.komu.ahwen.tx.TxNum
 import dev.komu.ahwen.types.FileName
 import dev.komu.ahwen.types.SqlType
@@ -41,10 +41,10 @@ class Buffer(fileManager: FileManager, private val logManager: LogManager) {
     private var modifiedBy: TxNum? = null
     private var logSequenceNumber = LSN.zero
 
-    fun getValue(offset: Int, type: SqlType): Constant =
+    fun getValue(offset: Int, type: SqlType): SqlValue =
         contents.getValue(offset, type)
 
-    fun setValue(offset: Int, value: Constant, txnum: TxNum, lsn: LSN) {
+    fun setValue(offset: Int, value: SqlValue, txnum: TxNum, lsn: LSN) {
         modifiedBy = txnum
         if (lsn >= LSN.zero)
             logSequenceNumber = lsn

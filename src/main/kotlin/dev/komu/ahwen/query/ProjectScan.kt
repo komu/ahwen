@@ -2,9 +2,12 @@ package dev.komu.ahwen.query
 
 import dev.komu.ahwen.types.ColumnName
 
+/**
+ * Runtime implementation of [ProjectPlan].
+ */
 class ProjectScan(private val scan: Scan, private val columns: Collection<ColumnName>) : Scan {
 
-    override fun get(column: ColumnName): Constant =
+    override fun get(column: ColumnName): SqlValue =
         if (column in columns)
             scan[column]
         else

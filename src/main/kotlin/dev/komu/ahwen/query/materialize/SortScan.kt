@@ -1,17 +1,21 @@
 package dev.komu.ahwen.query.materialize
 
-import dev.komu.ahwen.query.Constant
+import dev.komu.ahwen.query.SqlValue
 import dev.komu.ahwen.query.Scan
 import dev.komu.ahwen.record.RID
 import dev.komu.ahwen.types.ColumnName
 
+/**
+ * Scan that returns a sorted result from two sorted temp tables.
+ */
 class SortScan(
-    runs: List<TempTable>,
+    run1: TempTable,
+    run2: TempTable?,
     private val comparator: RecordComparator
 ) : Scan {
 
-    private val s1 = runs[0].open()
-    private var s2 = runs.getOrNull(1)?.open()
+    private val s1 = run1.open()
+    private var s2 = run2?.open()
     private var hasMore1 = s1.next()
     private var hasMore2 = s2?.next() ?: false
     private var currentScan: Scan? = null
@@ -52,7 +56,7 @@ class SortScan(
         s2?.close()
     }
 
-    override fun get(column: ColumnName): Constant =
+    override fun get(column: ColumnName): SqlValue =
         currentScan!![column]
 
     override fun contains(column: ColumnName) =

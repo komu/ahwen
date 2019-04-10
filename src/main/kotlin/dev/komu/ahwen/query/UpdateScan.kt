@@ -12,7 +12,7 @@ interface UpdateScan : Scan {
     /**
      * Set the value of [column] in current row to [value].
      */
-    operator fun set(column: ColumnName, value: Constant)
+    operator fun set(column: ColumnName, value: SqlValue)
 
     /**
      * Insert a new row and change position into it.

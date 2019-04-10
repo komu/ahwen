@@ -5,16 +5,23 @@ import dev.komu.ahwen.query.Scan
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.ColumnName
 
+/**
+ * Joins tables using merge join.
+ *
+ * Merge join sorts both inputs by the join keys and then proceeds to iterate through them:
+ * since both inputs are sorted, it only needs to look at first keys of both inputs to consider
+ * whether they can be joined or whether other one (and which one) needs to be advanced.
+ */
 class MergeJoinPlan(
     p1: Plan,
     p2: Plan,
-    private val fieldName1: ColumnName,
-    private val fieldName2: ColumnName,
+    private val joinColumn1: ColumnName,
+    private val joinColumn2: ColumnName,
     tx: Transaction
 ) : Plan {
 
-    private val p1 = SortPlan(p1, listOf(fieldName1), tx)
-    private val p2 = SortPlan(p2, listOf(fieldName2), tx)
+    private val p1 = SortPlan(p1, listOf(joinColumn1), tx)
+    private val p2 = SortPlan(p2, listOf(joinColumn2), tx)
 
     override val schema = p1.schema + p2.schema
 
@@ -22,7 +29,7 @@ class MergeJoinPlan(
         val s1 = p1.open()
         val s2 = p2.open()
 
-        return MergeJoinScan(s1, s2, fieldName1, fieldName2)
+        return MergeJoinScan(s1, s2, joinColumn1, joinColumn2)
     }
 
     override val blocksAccessed: Int
@@ -30,7 +37,7 @@ class MergeJoinPlan(
 
     override val recordsOutput: Int
         get() {
-            val maxVals = maxOf(p1.distinctValues(fieldName1), p2.distinctValues(fieldName2))
+            val maxVals = maxOf(p1.distinctValues(joinColumn1), p2.distinctValues(joinColumn2))
             return (p1.recordsOutput * p2.recordsOutput) / maxVals
         }
 

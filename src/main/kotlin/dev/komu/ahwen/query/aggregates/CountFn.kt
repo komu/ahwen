@@ -1,13 +1,16 @@
 package dev.komu.ahwen.query.aggregates
 
-import dev.komu.ahwen.query.Constant
-import dev.komu.ahwen.query.IntConstant
+import dev.komu.ahwen.query.SqlValue
+import dev.komu.ahwen.query.SqlInt
 import dev.komu.ahwen.query.Scan
 import dev.komu.ahwen.types.ColumnName
 
+/**
+ * Count rows in a group.
+ */
 class CountFn(column: ColumnName) : AggregationFn {
 
-    override val fieldName = ColumnName("countof$column")
+    override val columnName = ColumnName("countof$column")
 
     private var count = 0
 
@@ -19,6 +22,6 @@ class CountFn(column: ColumnName) : AggregationFn {
         count++
     }
 
-    override val value: Constant
-        get() = IntConstant(count)
+    override val value: SqlValue
+        get() = SqlInt(count)
 }

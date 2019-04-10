@@ -1,7 +1,7 @@
 package dev.komu.ahwen.metadata
 
 import dev.komu.ahwen.metadata.TableManager.Companion.checkNameLength
-import dev.komu.ahwen.query.StringConstant
+import dev.komu.ahwen.query.SqlString
 import dev.komu.ahwen.record.*
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.ColumnName
@@ -26,8 +26,8 @@ class ViewManager(isNew: Boolean, private val tableManager: TableManager, tx: Tr
         checkNameLength(name.value, COL_VIEW_NAME)
         tableManager.getTableInfo(TBL_VIEW_CAT, tx).open(tx).use { rf ->
             rf.insertRow(
-                COL_VIEW_NAME to StringConstant(name.value),
-                COL_VIEW_DEF to StringConstant(def)
+                COL_VIEW_NAME to SqlString(name.value),
+                COL_VIEW_DEF to SqlString(def)
             )
         }
     }

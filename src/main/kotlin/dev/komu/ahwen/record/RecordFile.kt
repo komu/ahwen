@@ -1,9 +1,9 @@
 package dev.komu.ahwen.record
 
 import dev.komu.ahwen.file.Block
-import dev.komu.ahwen.query.Constant
-import dev.komu.ahwen.query.IntConstant
-import dev.komu.ahwen.query.StringConstant
+import dev.komu.ahwen.query.SqlValue
+import dev.komu.ahwen.query.SqlInt
+import dev.komu.ahwen.query.SqlString
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.ColumnName
 import dev.komu.ahwen.types.SqlType
@@ -47,7 +47,7 @@ class RecordFile(private val ti: TableInfo, private val tx: Transaction) : Close
     fun getValue(column: ColumnName, type: SqlType) =
         rp.getValue(column, type)
 
-    fun setValue(column: ColumnName, value: Constant) {
+    fun setValue(column: ColumnName, value: SqlValue) {
         rp.setValue(column, value)
     }
 
@@ -93,12 +93,12 @@ inline fun RecordFile.forEach(func: () -> Unit) {
 }
 
 fun RecordFile.getInt(column: ColumnName) =
-    (getValue(column, SqlType.INTEGER) as IntConstant).value
+    (getValue(column, SqlType.INTEGER) as SqlInt).value
 
 fun RecordFile.getString(column: ColumnName) =
-    (getValue(column, SqlType.VARCHAR) as StringConstant).value
+    (getValue(column, SqlType.VARCHAR) as SqlString).value
 
-fun RecordFile.insertRow(vararg values: Pair<ColumnName, Constant>) {
+fun RecordFile.insertRow(vararg values: Pair<ColumnName, SqlValue>) {
     insert()
     for ((column, value) in values)
         setValue(column, value)

@@ -1,7 +1,13 @@
 package dev.komu.ahwen.query
 
 import dev.komu.ahwen.types.ColumnName
+import dev.komu.ahwen.query.materialize.MultiBufferProductPlan
 
+/**
+ * Evaluates the cartesian product of [s1] and [s2] using nested loops.
+ *
+ * @see MultiBufferProductPlan
+ */
 class ProductScan(private val s1: Scan, private val s2: Scan) : Scan {
     init {
         s1.next()
@@ -26,7 +32,7 @@ class ProductScan(private val s1: Scan, private val s2: Scan) : Scan {
         s2.close()
     }
 
-    override fun get(column: ColumnName): Constant =
+    override fun get(column: ColumnName): SqlValue =
         if (column in s1) s1[column] else s2[column]
 
     override fun contains(column: ColumnName): Boolean =

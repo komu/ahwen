@@ -38,7 +38,7 @@ interface Scan : Closeable {
     /**
      * Returns the value of given column in current row.
      */
-    operator fun get(column: ColumnName): Constant
+    operator fun get(column: ColumnName): SqlValue
 
     /**
      * Does the scan contain given column?

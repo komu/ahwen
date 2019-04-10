@@ -7,14 +7,27 @@ import dev.komu.ahwen.query.insertRowFrom
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.ColumnName
 
+/**
+ * Plan that sorts the input by given sort columns.
+ *
+ * First goes through the input and splits it into "runs". Each run is a temporary table
+ * consisting of already sorted data. (We go through the data picking rows as long as they
+ * are larger than previous row. Once this happens, we start a new scan. In the worst case
+ * scenario (input in reversed sorted order) we end up creating a temporary table for each
+ * row of the input.
+ *
+ * After splitting the input, we start merging the runs, but perform a final optimization:
+ * we never have to create a temporary table consisting of only one run because [SortScan]
+ * can easily produce the final results from two sorted runs.
+ */
 class SortPlan(
     private val plan: Plan,
-    sortFields: List<ColumnName>,
+    sortColumns: List<ColumnName>,
     private val tx: Transaction
 ) : Plan {
 
     override val schema = plan.schema
-    private val comparator = RecordComparator(sortFields)
+    private val comparator = RecordComparator(sortColumns)
 
     override fun open(): SortScan {
         var runs = plan.open().use { src ->
@@ -24,7 +37,7 @@ class SortPlan(
         while (runs.size > 2)
             runs = doMergeIteration(runs)
 
-        return SortScan(runs, comparator)
+        return SortScan(runs[0], runs.getOrNull(1), comparator)
     }
 
     override val blocksAccessed: Int

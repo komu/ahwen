@@ -1,10 +1,13 @@
 package dev.komu.ahwen.index.btree
 
 import dev.komu.ahwen.file.Block
-import dev.komu.ahwen.query.Constant
+import dev.komu.ahwen.query.SqlValue
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction
 
+/**
+ * Represents a directory node of a B-Tree.
+ */
 class BTreeDir(
     block: Block,
     private val ti: TableInfo,
@@ -18,7 +21,7 @@ class BTreeDir(
         contents.close()
     }
 
-    fun search(searchKey: Constant): Int {
+    fun search(searchKey: SqlValue): Int {
         var childBlock = findChildBlock(searchKey)
         while (contents.flag > 0) {
             contents.close()
@@ -63,7 +66,7 @@ class BTreeDir(
         return DirEntry(splitVal, newBlock.number)
     }
 
-    private fun findChildBlock(searchKey: Constant): Block {
+    private fun findChildBlock(searchKey: SqlValue): Block {
         var slot = contents.findSlotBefore(searchKey)
         if (contents.getDataValue(slot + 1) == searchKey)
             slot++

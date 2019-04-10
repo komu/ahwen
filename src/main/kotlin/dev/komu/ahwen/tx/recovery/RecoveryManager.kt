@@ -6,9 +6,9 @@ import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.log.BasicLogRecord
 import dev.komu.ahwen.log.LSN
 import dev.komu.ahwen.log.LogManager
-import dev.komu.ahwen.query.Constant
-import dev.komu.ahwen.query.IntConstant
-import dev.komu.ahwen.query.StringConstant
+import dev.komu.ahwen.query.SqlValue
+import dev.komu.ahwen.query.SqlInt
+import dev.komu.ahwen.query.SqlString
 import dev.komu.ahwen.tx.TxNum
 
 /**
@@ -90,7 +90,7 @@ class RecoveryManager(
         logManager.flush(lsn)
     }
 
-    fun setValue(buffer: Buffer, offset: Int, newValue: Constant): LSN {
+    fun setValue(buffer: Buffer, offset: Int, newValue: SqlValue): LSN {
         val oldValue = buffer.getValue(offset, newValue.type)
         val block = buffer.block ?: error("no block for buffer")
         return if (isTemporaryBlock(block)) {
@@ -101,9 +101,9 @@ class RecoveryManager(
         }
     }
 
-    private fun createUndoRecord(block: Block, offset: Int, oldValue: Constant): LogRecord = when (oldValue) {
-        is IntConstant -> SetIntRecord(txnum, block, offset, oldValue.value)
-        is StringConstant -> SetStringRecord(txnum, block, offset, oldValue.value)
+    private fun createUndoRecord(block: Block, offset: Int, oldValue: SqlValue): LogRecord = when (oldValue) {
+        is SqlInt -> SetIntRecord(txnum, block, offset, oldValue.value)
+        is SqlString -> SetStringRecord(txnum, block, offset, oldValue.value)
     }
 
     private fun doRollback() {

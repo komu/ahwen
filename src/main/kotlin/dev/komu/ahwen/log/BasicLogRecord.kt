@@ -1,9 +1,9 @@
 package dev.komu.ahwen.log
 
 import dev.komu.ahwen.file.Page
-import dev.komu.ahwen.query.Constant
-import dev.komu.ahwen.query.IntConstant
-import dev.komu.ahwen.query.StringConstant
+import dev.komu.ahwen.query.SqlValue
+import dev.komu.ahwen.query.SqlInt
+import dev.komu.ahwen.query.SqlString
 import dev.komu.ahwen.types.SqlType
 
 /**
@@ -14,12 +14,12 @@ import dev.komu.ahwen.types.SqlType
 class BasicLogRecord(private val page: Page, private var pos: Int) {
 
     fun nextInt(): Int =
-        (nextValue(SqlType.INTEGER) as IntConstant).value
+        (nextValue(SqlType.INTEGER) as SqlInt).value
 
     fun nextString(): String =
-        (nextValue(SqlType.VARCHAR) as StringConstant).value
+        (nextValue(SqlType.VARCHAR) as SqlString).value
 
-    private fun nextValue(type: SqlType): Constant {
+    private fun nextValue(type: SqlType): SqlValue {
         val result = page.getValue(pos, type)
         pos += result.representationSize
         return result

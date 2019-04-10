@@ -27,6 +27,9 @@ class Schema private constructor(private val info: Map<ColumnName, FieldInfo>) {
     operator fun get(name: ColumnName) =
         info[name] ?: error("no field $name")
 
+    fun project(columns: Collection<ColumnName>) =
+        Schema(info.filterKeys { it in columns })
+
     class FieldInfo(val type: SqlType, val length: Int)
 
     companion object {
@@ -52,7 +55,7 @@ class Schema private constructor(private val info: Map<ColumnName, FieldInfo>) {
         }
 
         fun copyFieldFrom(name: ColumnName, schema: Schema) {
-            val info = schema.get(name)
+            val info = schema[name]
 
             addField(name, info.type, info.length)
         }
@@ -60,4 +63,9 @@ class Schema private constructor(private val info: Map<ColumnName, FieldInfo>) {
         fun build(): Schema =
             Schema(info)
     }
+}
+
+fun Schema.lengthInBytes(column: ColumnName): Int {
+    val info = this[column]
+    return info.type.maximumBytes(info.length)
 }

@@ -3,6 +3,13 @@ package dev.komu.ahwen.query
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.types.ColumnName
 
+/**
+ * Represents a predicate of a query.
+ *
+ * Predicates are represented in conjunctive normal form, which means that at top level we will always have
+ * AND-separated clauses which themselves will not contain ANDs. This means that we can always safely split
+ * a [SelectPlan] with multiple terms into several selects and move them around.
+ */
 class Predicate() {
 
     private val terms = mutableListOf<Term>()
@@ -43,7 +50,7 @@ class Predicate() {
         return result.takeIf { it.terms.isNotEmpty() }
     }
 
-    fun equatesWithConstant(fieldName: ColumnName): Constant? {
+    fun equatesWithConstant(fieldName: ColumnName): SqlValue? {
         for (term in terms) {
             val value = term.equatesWithConstant(fieldName)
             if (value != null)

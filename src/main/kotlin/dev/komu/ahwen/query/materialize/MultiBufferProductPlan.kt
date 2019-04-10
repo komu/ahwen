@@ -1,11 +1,23 @@
-package dev.komu.ahwen.query
+package dev.komu.ahwen.query.materialize
 
 import dev.komu.ahwen.buffer.BufferManager
-import dev.komu.ahwen.query.materialize.MaterializePlan
-import dev.komu.ahwen.query.materialize.TempTable
+import dev.komu.ahwen.query.Plan
+import dev.komu.ahwen.query.Scan
+import dev.komu.ahwen.query.copyFrom
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.ColumnName
 
+/**
+ * Cartesian product that avoids O(m*n) block accesses by using more buffers.
+ *
+ * Instead of performing naive nested loops, it splits the right side into
+ * chunks using free buffers and then joins the left side against all rows
+ * of one chunk before moving on to next chunk. This allows keeping all rows
+ * of the chunk in cache.
+ *
+ * Joining this way means that results will be in different order, but since
+ * ordering is not specified anyway, it doesn't matter.
+ */
 class MultiBufferProductPlan(
     private val lhs: Plan,
     private val rhs: Plan,

@@ -1,7 +1,7 @@
 package dev.komu.ahwen.metadata
 
 import dev.komu.ahwen.metadata.TableManager.Companion.MAX_NAME
-import dev.komu.ahwen.query.StringConstant
+import dev.komu.ahwen.query.SqlString
 import dev.komu.ahwen.record.*
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.ColumnName
@@ -38,9 +38,9 @@ class IndexManager(
 
         ti.open(tx).use { rf ->
             rf.insertRow(
-                COL_INDEX_NAME to StringConstant(indexName.value),
-                COL_TABLE_NAME to StringConstant(tableName.value),
-                COL_FIELD_NAME to StringConstant(fieldName.value)
+                COL_INDEX_NAME to SqlString(indexName.value),
+                COL_TABLE_NAME to SqlString(tableName.value),
+                COL_FIELD_NAME to SqlString(fieldName.value)
             )
         }
     }

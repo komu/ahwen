@@ -1,11 +1,14 @@
-package dev.komu.ahwen.index.query
+package dev.komu.ahwen.query.index
 
 import dev.komu.ahwen.index.Index
-import dev.komu.ahwen.query.Constant
+import dev.komu.ahwen.query.SqlValue
 import dev.komu.ahwen.query.Scan
 import dev.komu.ahwen.query.TableScan
 import dev.komu.ahwen.types.ColumnName
 
+/**
+ * Runtime implementation of [IndexJoinPlan].
+ */
 class IndexJoinScan(
     private val scan: Scan,
     private val index: Index,
@@ -42,7 +45,7 @@ class IndexJoinScan(
         index.close()
     }
 
-    override fun get(column: ColumnName): Constant =
+    override fun get(column: ColumnName): SqlValue =
         if (column in tableScan) tableScan[column] else scan[column]
 
     override fun contains(column: ColumnName): Boolean =

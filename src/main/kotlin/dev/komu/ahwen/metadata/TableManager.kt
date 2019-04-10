@@ -1,7 +1,7 @@
 package dev.komu.ahwen.metadata
 
-import dev.komu.ahwen.query.IntConstant
-import dev.komu.ahwen.query.StringConstant
+import dev.komu.ahwen.query.SqlInt
+import dev.komu.ahwen.query.SqlString
 import dev.komu.ahwen.record.*
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.ColumnName
@@ -40,8 +40,8 @@ class TableManager(isNew: Boolean, tx: Transaction) {
         // insert one record into tblcat
         tableCatalogInfo.open(tx).use { tcatFile ->
             tcatFile.insertRow(
-                COL_TABLE_NAME to StringConstant(tableName.value),
-                COL_REC_LENGTH to IntConstant(ti.recordLength)
+                COL_TABLE_NAME to SqlString(tableName.value),
+                COL_REC_LENGTH to SqlInt(ti.recordLength)
             )
         }
 
@@ -50,11 +50,11 @@ class TableManager(isNew: Boolean, tx: Transaction) {
             for (column in schema.columns) {
                 val info = schema[column]
                 fcat.insertRow(
-                    COL_TABLE_NAME to StringConstant(tableName.value),
-                    COL_FIELD_NAME to StringConstant(column.value),
-                    COL_TYPE to IntConstant(info.type.code),
-                    COL_LENGTH to IntConstant(info.length),
-                    COL_OFFSET to IntConstant(ti.offset(column))
+                    COL_TABLE_NAME to SqlString(tableName.value),
+                    COL_FIELD_NAME to SqlString(column.value),
+                    COL_TYPE to SqlInt(info.type.code),
+                    COL_LENGTH to SqlInt(info.length),
+                    COL_OFFSET to SqlInt(ti.offset(column))
                 )
             }
         }

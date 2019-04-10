@@ -4,6 +4,7 @@ import dev.komu.ahwen.buffer.BufferManager
 import dev.komu.ahwen.metadata.MetadataManager
 import dev.komu.ahwen.parse.QueryData
 import dev.komu.ahwen.query.*
+import dev.komu.ahwen.query.materialize.MultiBufferProductPlan
 import dev.komu.ahwen.tx.Transaction
 
 class BasicQueryPlanner(

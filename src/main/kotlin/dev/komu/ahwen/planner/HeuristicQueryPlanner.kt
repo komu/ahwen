@@ -7,6 +7,13 @@ import dev.komu.ahwen.query.Plan
 import dev.komu.ahwen.query.ProjectPlan
 import dev.komu.ahwen.tx.Transaction
 
+/**
+ * [QueryPlanner] that uses simple heuristics to decide on a good join order for tables:
+ *
+ * First the table that would result in lowest number of outputted rows is picked as the initial table.
+ * Then as long as there are more tables available, joins the one whose output would result in the lowest
+ * amount of rows outputted after the join.
+ */
 class HeuristicQueryPlanner(
     private val metadataManager: MetadataManager,
     private val bufferManager: BufferManager
@@ -14,16 +21,8 @@ class HeuristicQueryPlanner(
 
     override fun createPlan(data: QueryData, tx: Transaction): Plan {
         // TODO: support views
-        val tablePlanners = mutableListOf<TablePlanner>()
-
-        for (tblname in data.tables)
-            tablePlanners += TablePlanner(
-                tblname,
-                data.predicate,
-                tx,
-                metadataManager,
-                bufferManager
-            )
+        val tablePlanners = data.tables.map { TablePlanner(it, data.predicate, tx, metadataManager, bufferManager) }
+            .toMutableList()
 
         var currentPlan = tablePlanners.getLowestSelectPlan()
 

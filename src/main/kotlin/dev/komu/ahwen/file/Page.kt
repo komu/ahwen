@@ -3,9 +3,9 @@
 package dev.komu.ahwen.file
 
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
-import dev.komu.ahwen.query.Constant
-import dev.komu.ahwen.query.IntConstant
-import dev.komu.ahwen.query.StringConstant
+import dev.komu.ahwen.query.SqlValue
+import dev.komu.ahwen.query.SqlInt
+import dev.komu.ahwen.query.SqlString
 import dev.komu.ahwen.types.FileName
 import dev.komu.ahwen.types.SqlType
 import dev.komu.ahwen.types.SqlType.*
@@ -42,24 +42,24 @@ class Page(private val fileManager: FileManager) {
         }
     }
 
-    operator fun set(offset: Int, value: Constant) {
+    operator fun set(offset: Int, value: SqlValue) {
         lock.withLock {
             contents.position(offset)
             when (value) {
-                is IntConstant ->
+                is SqlInt ->
                     contents.putInt(value.value)
-                is StringConstant ->
+                is SqlString ->
                     contents.writeString(value.value)
             }
         }
     }
 
-    fun getValue(offset: Int, type: SqlType): Constant =
+    fun getValue(offset: Int, type: SqlType): SqlValue =
         lock.withLock {
             contents.position(offset)
             when (type) {
-                INTEGER -> IntConstant(contents.getInt())
-                VARCHAR -> StringConstant(contents.readString())
+                INTEGER -> SqlInt(contents.getInt())
+                VARCHAR -> SqlString(contents.readString())
             }
         }
 
@@ -74,30 +74,16 @@ class Page(private val fileManager: FileManager) {
 
         const val INT_SIZE = Int.SIZE_BYTES
 
-        /** Character set used to store strings */
-        private val charset = Charsets.UTF_8
-
-        private val bytesPerChar = charset.newEncoder().maxBytesPerChar().toInt()
-
-        /**
-         * Returns the number of bytes needed to store a string of given length.
-         *
-         * Strings are represented by storing their length (32 bit integer) followed
-         * by their characters.
-         */
-        fun strSize(len: Int): Int =
-            INT_SIZE + (len * bytesPerChar)
-
         private fun ByteBuffer.readString(): String {
             val len = getInt()
             val bytes = ByteArray(len)
 
             get(bytes)
-            return String(bytes, charset)
+            return String(bytes, SqlString.charset)
         }
 
         private fun ByteBuffer.writeString(value: String) {
-            val bytes = value.toByteArray(charset)
+            val bytes = value.toByteArray(SqlString.charset)
 
             putInt(bytes.size)
             put(bytes)
@@ -106,9 +92,9 @@ class Page(private val fileManager: FileManager) {
 }
 
 fun Page.getInt(offset: Int): Int =
-    (getValue(offset, SqlType.INTEGER) as IntConstant).value
+    (getValue(offset, SqlType.INTEGER) as SqlInt).value
 
 operator fun Page.set(offset: Int, value: Int) {
-    this[offset] = IntConstant(value)
+    this[offset] = SqlInt(value)
 }
 

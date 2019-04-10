@@ -1,14 +1,19 @@
 package dev.komu.ahwen.planner
 
 import dev.komu.ahwen.buffer.BufferManager
-import dev.komu.ahwen.index.query.IndexJoinPlan
-import dev.komu.ahwen.index.query.IndexSelectPlan
+import dev.komu.ahwen.query.index.IndexJoinPlan
+import dev.komu.ahwen.query.index.IndexSelectPlan
 import dev.komu.ahwen.metadata.MetadataManager
 import dev.komu.ahwen.query.*
+import dev.komu.ahwen.query.materialize.MultiBufferProductPlan
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.TableName
 
+/**
+ * Planner that tries to perform optimal selects, joins or products for given table,
+ * using indices if possible.
+ */
 class TablePlanner(
     tableName: TableName,
     private val myPredicate: Predicate,

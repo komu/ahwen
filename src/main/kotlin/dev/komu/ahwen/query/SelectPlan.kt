@@ -1,7 +1,13 @@
 package dev.komu.ahwen.query
 
 import dev.komu.ahwen.types.ColumnName
+import dev.komu.ahwen.query.index.IndexSelectPlan
 
+/**
+ * Evaluates to rows of [plan] filtered by [predicate].
+ *
+ * Performs full scan over input, see [IndexSelectPlan] for version that utilizes an index.
+ */
 class SelectPlan(private val plan: Plan, private val predicate: Predicate) : Plan by plan {
 
     override fun open(): UpdateScan =

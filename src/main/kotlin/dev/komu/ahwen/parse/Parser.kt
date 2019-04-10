@@ -21,17 +21,17 @@ class Parser(query: String) {
     private fun indexName(): IndexName =
         IndexName(lex.eatId())
 
-    fun constant(): Constant =
+    private fun constant(): SqlValue =
         if (lex.matchStringConstant())
-            StringConstant(lex.eatStringConstant())
+            SqlString(lex.eatStringConstant())
         else
-            IntConstant(lex.eatIntConstant())
+            SqlInt(lex.eatIntConstant())
 
     private fun expression(): Expression =
         if (lex.matchId())
-            FieldNameExpression(ColumnName(lex.eatId()))
+            Expression.Column(ColumnName(lex.eatId()))
         else
-            ConstantExpression(constant())
+            Expression.Const(constant())
 
     private fun term(): Term {
         val lhs = expression()
@@ -98,7 +98,7 @@ class Parser(query: String) {
             create()
     }
 
-    fun create(): CommandData {
+    private fun create(): CommandData {
         lex.eatKeyword("create")
         return when {
             lex.matchKeyword("table") -> createTable()
@@ -145,8 +145,8 @@ class Parser(query: String) {
         return fields
     }
 
-    private fun constList(): List<Constant> {
-        val values = mutableListOf<Constant>()
+    private fun constList(): List<SqlValue> {
+        val values = mutableListOf<SqlValue>()
         values += constant()
         while (lex.matchDelim(',')) {
             lex.eatDelim(',')
@@ -155,7 +155,7 @@ class Parser(query: String) {
         return values
     }
 
-    fun modify(): ModifyData {
+    private fun modify(): ModifyData {
         lex.eatKeyword("update")
         val table = tableName()
         lex.eatKeyword("set")

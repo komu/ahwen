@@ -4,9 +4,10 @@ import dev.komu.ahwen.record.RID
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.ColumnName
-import dev.komu.ahwen.types.SqlType.INTEGER
-import dev.komu.ahwen.types.SqlType.VARCHAR
 
+/**
+ * Runtime implementation of [TablePlan].
+ */
 class TableScan(ti: TableInfo, tx: Transaction) : UpdateScan {
 
     private val rf = ti.open(tx)
@@ -29,7 +30,7 @@ class TableScan(ti: TableInfo, tx: Transaction) : UpdateScan {
     override fun contains(column: ColumnName): Boolean =
         column in schema
 
-    override fun set(column: ColumnName, value: Constant) =
+    override fun set(column: ColumnName, value: SqlValue) =
         rf.setValue(column, value)
 
     override fun delete() {

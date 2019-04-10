@@ -2,7 +2,7 @@ package dev.komu.ahwen.record
 
 import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
-import dev.komu.ahwen.query.Constant
+import dev.komu.ahwen.query.SqlValue
 import dev.komu.ahwen.tx.*
 import dev.komu.ahwen.types.ColumnName
 import dev.komu.ahwen.types.SqlType
@@ -33,7 +33,7 @@ class RecordPage(
     fun getValue(column: ColumnName, type: SqlType) =
         tx.getValue(block, columnPosition(column), type)
 
-    fun setValue(column: ColumnName, value: Constant) {
+    fun setValue(column: ColumnName, value: SqlValue) {
         tx.setValue(block, columnPosition(column), value)
     }
 

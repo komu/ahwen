@@ -3,14 +3,13 @@ package dev.komu.ahwen.query
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.types.ColumnName
 
-class ProjectPlan(private val plan: Plan, private val fields: Collection<ColumnName>) : Plan by plan {
+/**
+ * Performs projection: takes [columns] from input and discards the rest
+ */
+class ProjectPlan(private val plan: Plan, private val columns: Collection<ColumnName>) : Plan by plan {
 
-    override val schema = Schema {
-        val sch = plan.schema
-        for (field in fields)
-            copyFieldFrom(field, sch)
-    }
+    override val schema = plan.schema.project(columns)
 
     override fun open(): Scan =
-        ProjectScan(plan.open(), fields)
+        ProjectScan(plan.open(), columns)
 }

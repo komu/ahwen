@@ -1,9 +1,12 @@
 package dev.komu.ahwen.query.aggregates
 
-import dev.komu.ahwen.query.Constant
+import dev.komu.ahwen.query.SqlValue
 import dev.komu.ahwen.query.Scan
 import dev.komu.ahwen.types.ColumnName
 
+/**
+ * A scan that performs group by with given aggregate functions.
+ */
 class GroupByScan(
     private val scan: Scan,
     private val groupFields: Collection<ColumnName>,
@@ -49,13 +52,21 @@ class GroupByScan(
         scan.close()
     }
 
-    override fun get(column: ColumnName): Constant {
+    override fun get(column: ColumnName): SqlValue =
         if (column in groupFields)
-            return groupValue[column]
-
-        return aggregationFns.first { it.fieldName == column }.value
-    }
+            groupValue[column]
+        else
+            aggregationFns.first { it.columnName == column }.value
 
     override fun contains(column: ColumnName): Boolean =
-        column in groupFields || aggregationFns.any { it.fieldName == column }
+        column in groupFields || aggregationFns.any { it.columnName == column }
+
+    private data class GroupValue(private val values: Map<ColumnName, SqlValue>) {
+
+        constructor(scan: Scan, fields: Collection<ColumnName>) :
+            this(fields.map { it to scan[it] }.toMap())
+
+        operator fun get(fieldName: ColumnName): SqlValue =
+            values[fieldName] ?: error("unknown field $fieldName")
+    }
 }

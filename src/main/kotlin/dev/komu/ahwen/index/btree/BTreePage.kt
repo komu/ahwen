@@ -2,15 +2,16 @@ package dev.komu.ahwen.index.btree
 
 import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
-import dev.komu.ahwen.query.Constant
-import dev.komu.ahwen.query.IntConstant
-import dev.komu.ahwen.query.StringConstant
+import dev.komu.ahwen.query.SqlValue
+import dev.komu.ahwen.query.SqlInt
 import dev.komu.ahwen.record.RID
 import dev.komu.ahwen.record.TableInfo
 import dev.komu.ahwen.tx.*
 import dev.komu.ahwen.types.ColumnName
-import dev.komu.ahwen.types.SqlType
 
+/**
+ * Low level class for B Tree page layout used by [BTreeDir] and [BTreeLeaf].
+ */
 class BTreePage(
     private var currentBlock: Block,
     private val ti: TableInfo,
@@ -24,7 +25,7 @@ class BTreePage(
         tx.pin(currentBlock)
     }
 
-    fun findSlotBefore(searchKey: Constant): Int {
+    fun findSlotBefore(searchKey: SqlValue): Int {
         var slot = 0
         while (slot < numRecs && getDataValue(slot) < searchKey)
             slot++
@@ -51,7 +52,7 @@ class BTreePage(
         return newBlock
     }
 
-    fun getDataValue(slot: Int): Constant =
+    fun getDataValue(slot: Int): SqlValue =
         getValue(slot, COL_DATAVAL)
 
     var flag: Int
@@ -74,7 +75,7 @@ class BTreePage(
     fun getChildNum(slot: Int) =
         getInt(slot, COL_BLOCK)
 
-    fun insertDir(slot: Int, value: Constant, blknum: Int) {
+    fun insertDir(slot: Int, value: SqlValue, blknum: Int) {
         insert(slot)
         setValue(slot, COL_DATAVAL, value)
         setInt(slot, COL_BLOCK, blknum)
@@ -85,7 +86,7 @@ class BTreePage(
     fun getDataRID(slot: Int): RID =
         RID(getInt(slot, COL_BLOCK), getInt(slot, COL_ID))
 
-    fun insertLeaf(slot: Int, value: Constant, rid: RID) {
+    fun insertLeaf(slot: Int, value: SqlValue, rid: RID) {
         insert(slot)
         setValue(slot, COL_DATAVAL, value)
         setInt(slot, COL_BLOCK, rid.blockNumber)
@@ -100,22 +101,22 @@ class BTreePage(
 
     // Private methods
 
-    private fun getValue(slot: Int, fieldName: ColumnName): Constant {
+    private fun getValue(slot: Int, fieldName: ColumnName): SqlValue {
         val pos = fieldPos(slot, fieldName)
         return tx.getValue(currentBlock, pos, ti.schema.type(fieldName))
     }
 
-    private fun setValue(slot: Int, fieldName: ColumnName, value: Constant) {
+    private fun setValue(slot: Int, fieldName: ColumnName, value: SqlValue) {
         assert(value.type == ti.schema.type(fieldName))
         val pos = fieldPos(slot, fieldName)
         tx.setValue(currentBlock, pos, value)
     }
 
     private fun getInt(slot: Int, fieldName: ColumnName): Int =
-        (getValue(slot, fieldName) as IntConstant).value
+        (getValue(slot, fieldName) as SqlInt).value
 
     private fun setInt(slot: Int, fieldName: ColumnName, value: Int) {
-        setValue(slot, fieldName, IntConstant(value))
+        setValue(slot, fieldName, SqlInt(value))
     }
 
     private fun insert(slot: Int) {

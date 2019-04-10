@@ -9,6 +9,10 @@ import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.TableName
 import kotlin.math.ceil
 
+/**
+ * A plan that materializes given plan, i.e. writes it to a temporary table
+ * so that we don't need to recalculate it over and over again.
+ */
 class MaterializePlan(private val srcPlan: Plan, private val tx: Transaction) : Plan by srcPlan {
 
     override fun open(): Scan {

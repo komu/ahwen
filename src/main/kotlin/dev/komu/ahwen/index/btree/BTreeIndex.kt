@@ -2,7 +2,7 @@ package dev.komu.ahwen.index.btree
 
 import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.index.Index
-import dev.komu.ahwen.query.Constant
+import dev.komu.ahwen.query.SqlValue
 import dev.komu.ahwen.record.RID
 import dev.komu.ahwen.record.Schema
 import dev.komu.ahwen.record.TableInfo
@@ -11,6 +11,9 @@ import dev.komu.ahwen.types.IndexName
 import dev.komu.ahwen.types.TableName
 import kotlin.math.ln
 
+/**
+ * [Index] implemented as a B+ Tree.
+ */
 class BTreeIndex(
     indexName: IndexName,
     leafSchema: Schema,
@@ -43,7 +46,7 @@ class BTreeIndex(
         page.close()
     }
 
-    override fun beforeFirst(searchKey: Constant) {
+    override fun beforeFirst(searchKey: SqlValue) {
         close()
         val root = BTreeDir(rootBlock, dirTi, tx)
         val blockNum = root.search(searchKey)
@@ -58,7 +61,7 @@ class BTreeIndex(
     override val dataRid: RID
         get() = leaf!!.dataRid
 
-    override fun insert(dataVal: Constant, dataRid: RID) {
+    override fun insert(dataVal: SqlValue, dataRid: RID) {
         beforeFirst(dataVal)
         val e = leaf!!.insert(dataRid)
         leaf!!.close()
@@ -71,7 +74,7 @@ class BTreeIndex(
         root.close()
     }
 
-    override fun delete(dataVal: Constant, dataRid: RID) {
+    override fun delete(dataVal: SqlValue, dataRid: RID) {
         beforeFirst(dataVal)
         leaf!!.delete(dataRid)
         leaf!!.close()
