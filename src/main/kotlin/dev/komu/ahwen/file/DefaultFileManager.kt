@@ -1,5 +1,6 @@
 package dev.komu.ahwen.file
 
+import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
 import dev.komu.ahwen.types.FileName
 import java.io.File
 import java.io.IOException
@@ -33,6 +34,8 @@ class DefaultFileManager(private val dbDirectory: File) : FileManager {
     }
 
     override fun read(block: Block, bb: ByteBuffer) {
+        assert(bb.capacity() == BLOCK_SIZE)
+
         stats.incrementReads()
         lock.withLock {
             bb.clear()
@@ -42,6 +45,8 @@ class DefaultFileManager(private val dbDirectory: File) : FileManager {
     }
 
     override fun write(block: Block, bb: ByteBuffer) {
+        assert(bb.capacity() == BLOCK_SIZE)
+
         stats.incrementWrites()
         lock.withLock {
             bb.rewind()
@@ -51,6 +56,8 @@ class DefaultFileManager(private val dbDirectory: File) : FileManager {
     }
 
     override fun append(fileName: FileName, bb: ByteBuffer): Block {
+        assert(bb.capacity() == BLOCK_SIZE)
+
         lock.withLock {
             val newBlockNum = size(fileName)
             val block = Block(fileName, newBlockNum)
@@ -61,8 +68,9 @@ class DefaultFileManager(private val dbDirectory: File) : FileManager {
 
     override fun size(fileName: FileName): Int {
         lock.withLock {
-            val fc = getFile(fileName)
-            return fc.size().toInt() / Page.BLOCK_SIZE
+            val size = getFile(fileName).size().toInt()
+            assert(size % BLOCK_SIZE == 0)
+            return size / BLOCK_SIZE
         }
     }
 
@@ -72,4 +80,3 @@ class DefaultFileManager(private val dbDirectory: File) : FileManager {
             RandomAccessFile(dbTable, "rws").channel
         }
 }
-
