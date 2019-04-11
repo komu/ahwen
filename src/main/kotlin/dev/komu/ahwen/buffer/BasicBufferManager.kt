@@ -19,6 +19,9 @@ class BasicBufferManager(bufferCount: Int, fileManager: FileManager, logManager:
 
     private val bufferPool = List(bufferCount) { Buffer(fileManager, logManager) }
 
+    /** A cache from blocks to their corresponding buffers. */
+    private val buffersByBlocks = mutableMapOf<Block, Buffer>()
+
     /** The amount of available buffers in the pool */
     @Volatile
     var available = bufferPool.size
@@ -41,13 +44,15 @@ class BasicBufferManager(bufferCount: Int, fileManager: FileManager, logManager:
             if (buffer == null) {
                 buffer = chooseUnpinnedBuffer()
                     ?: return null
+
+                removeOldBlock(buffer)
                 buffer.assignToBlock(block)
+                buffersByBlocks[block] = buffer
             }
 
             if (!buffer.isPinned)
                 available--
             buffer.pin()
-
             return buffer
         }
     }
@@ -57,7 +62,9 @@ class BasicBufferManager(bufferCount: Int, fileManager: FileManager, logManager:
             val buffer = chooseUnpinnedBuffer()
                 ?: return null
 
-            buffer.assignToNew(fileName, formatter)
+            removeOldBlock(buffer)
+            val newBlock = buffer.assignToNew(fileName, formatter)
+            buffersByBlocks[newBlock] = buffer
             available--
             buffer.pin()
             return buffer
@@ -72,9 +79,16 @@ class BasicBufferManager(bufferCount: Int, fileManager: FileManager, logManager:
         }
     }
 
-    // TODO: maintain a map from blocks to buffers so that we don't have to do an O(n) walk
+    private fun removeOldBlock(buffer: Buffer) {
+        val block = buffer.block
+        if (block != null)
+            buffersByBlocks.remove(block)
+    }
+
     private fun findExistingBuffer(block: Block): Buffer? =
-        bufferPool.find { it.block == block }
+        buffersByBlocks[block]?.also {
+            assert(it.block == block) { "${it.block} != $block" }
+        }
 
     /**
      * Returns an unpinned buffer to assign to another block.

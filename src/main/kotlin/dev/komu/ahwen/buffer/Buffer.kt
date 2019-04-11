@@ -81,10 +81,12 @@ class Buffer(fileManager: FileManager, private val logManager: LogManager) {
         pins = 0
     }
 
-    fun assignToNew(fileName: FileName, formatter: PageFormatter) {
+    fun assignToNew(fileName: FileName, formatter: PageFormatter): Block {
         flush()
         formatter.format(contents)
-        block = contents.append(fileName)
+        val newBlock = contents.append(fileName)
+        block = newBlock
         pins = 0
+        return newBlock
     }
 }
