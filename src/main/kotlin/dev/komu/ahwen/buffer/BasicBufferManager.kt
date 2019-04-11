@@ -5,6 +5,7 @@ import dev.komu.ahwen.file.FileManager
 import dev.komu.ahwen.log.LogManager
 import dev.komu.ahwen.tx.TxNum
 import dev.komu.ahwen.types.FileName
+import dev.komu.ahwen.utils.LRUSet
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -17,7 +18,11 @@ import kotlin.concurrent.withLock
  */
 class BasicBufferManager(bufferCount: Int, fileManager: FileManager, logManager: LogManager) {
 
+    /** All buffers in the system */
     private val bufferPool = List(bufferCount) { Buffer(fileManager, logManager) }
+
+    /** Buffers sorted by their usage */
+    private val lru = LRUSet(bufferPool)
 
     /** A cache from blocks to their corresponding buffers. */
     private val buffersByBlocks = mutableMapOf<Block, Buffer>()
@@ -74,8 +79,10 @@ class BasicBufferManager(bufferCount: Int, fileManager: FileManager, logManager:
     fun unpin(buffer: Buffer) {
         lock.withLock {
             buffer.unpin()
-            if (!buffer.isPinned)
+            if (!buffer.isPinned) {
                 available++
+                lru.touch(buffer)
+            }
         }
     }
 
@@ -92,9 +99,7 @@ class BasicBufferManager(bufferCount: Int, fileManager: FileManager, logManager:
 
     /**
      * Returns an unpinned buffer to assign to another block.
-     *
-     * TODO: Returning the first unpinned buffer is as simple as it gets, but is far from optimal.
      */
     private fun chooseUnpinnedBuffer(): Buffer? =
-        bufferPool.find { !it.isPinned }
+        lru.find { !it.isPinned }
 }
