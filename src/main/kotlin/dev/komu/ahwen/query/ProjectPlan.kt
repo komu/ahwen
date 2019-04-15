@@ -12,4 +12,6 @@ class ProjectPlan(private val plan: Plan, private val columns: Collection<Column
 
     override fun open(): Scan =
         ProjectScan(plan.open(), columns)
+
+    override fun toString() = "[project plan=$plan, columns=$columns]"
 }
