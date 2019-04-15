@@ -6,7 +6,6 @@ import dev.komu.ahwen.query.SqlInt
 import dev.komu.ahwen.query.SqlString
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.ColumnName
-import dev.komu.ahwen.types.SqlType
 import java.io.Closeable
 
 /**
@@ -44,11 +43,11 @@ class RecordFile(private val ti: TableInfo, private val tx: Transaction) : Close
         }
     }
 
-    fun getValue(column: ColumnName, type: SqlType) =
-        rp.getValue(column, type)
+    operator fun get(column: ColumnName) =
+        rp[column]
 
-    fun setValue(column: ColumnName, value: SqlValue) {
-        rp.setValue(column, value)
+    operator fun set(column: ColumnName, value: SqlValue) {
+        rp[column] = value
     }
 
     fun delete() {
@@ -93,13 +92,13 @@ inline fun RecordFile.forEach(func: () -> Unit) {
 }
 
 fun RecordFile.getInt(column: ColumnName) =
-    (getValue(column, SqlType.INTEGER) as SqlInt).value
+    (this[column] as SqlInt).value
 
 fun RecordFile.getString(column: ColumnName) =
-    (getValue(column, SqlType.VARCHAR) as SqlString).value
+    (this[column] as SqlString).value
 
 fun RecordFile.insertRow(vararg values: Pair<ColumnName, SqlValue>) {
     insert()
     for ((column, value) in values)
-        setValue(column, value)
+        this[column] = value
 }

@@ -30,10 +30,11 @@ class RecordPage(
 
     fun next() = searchFor(IN_USE)
 
-    fun getValue(column: ColumnName, type: SqlType) =
-        tx.getValue(block, columnPosition(column), type)
+    operator fun get(column: ColumnName) =
+        tx.getValue(block, columnPosition(column), ti.schema.type(column))
 
-    fun setValue(column: ColumnName, value: SqlValue) {
+    operator fun set(column: ColumnName, value: SqlValue) {
+        assert(ti.schema.type(column) == value.type)
         tx.setValue(block, columnPosition(column), value)
     }
 

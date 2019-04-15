@@ -25,13 +25,13 @@ class TableScan(ti: TableInfo, tx: Transaction) : UpdateScan {
     }
 
     override fun get(column: ColumnName) =
-        rf.getValue(column, schema.type(column))
+        rf[column]
 
     override fun contains(column: ColumnName): Boolean =
         column in schema
 
     override fun set(column: ColumnName, value: SqlValue) =
-        rf.setValue(column, value)
+        rf.set(column, value)
 
     override fun delete() {
         rf.delete()

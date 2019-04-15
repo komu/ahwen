@@ -102,7 +102,7 @@ class MultiBufferProductScan(
         }
 
         override fun get(column: ColumnName): SqlValue =
-            rp.getValue(column, schema.type(column))
+            rp[column]
 
         override fun contains(column: ColumnName): Boolean =
             column in schema

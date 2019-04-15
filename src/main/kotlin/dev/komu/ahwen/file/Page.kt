@@ -92,7 +92,7 @@ class Page(private val fileManager: FileManager) {
 }
 
 fun Page.getInt(offset: Int): Int =
-    (getValue(offset, SqlType.INTEGER) as SqlInt).value
+    (getValue(offset, INTEGER) as SqlInt).value
 
 operator fun Page.set(offset: Int, value: Int) {
     this[offset] = SqlInt(value)
