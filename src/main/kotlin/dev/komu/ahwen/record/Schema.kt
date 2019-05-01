@@ -30,7 +30,7 @@ class Schema private constructor(private val info: Map<ColumnName, FieldInfo>) {
     fun project(columns: Collection<ColumnName>) =
         Schema(info.filterKeys { it in columns })
 
-    class FieldInfo(val type: SqlType, val length: Int)
+    class FieldInfo(val type: SqlType<*>, val length: Int)
 
     companion object {
 
@@ -42,7 +42,7 @@ class Schema private constructor(private val info: Map<ColumnName, FieldInfo>) {
 
         private val info = mutableMapOf<ColumnName, FieldInfo>()
 
-        fun addField(name: ColumnName, type: SqlType, length: Int) {
+        fun addField(name: ColumnName, type: SqlType<*>, length: Int) {
             info[name] = FieldInfo(type, length)
         }
 

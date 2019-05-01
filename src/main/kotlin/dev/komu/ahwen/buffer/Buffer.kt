@@ -41,7 +41,7 @@ class Buffer(fileManager: FileManager, private val logManager: LogManager) {
     private var modifiedBy: TxNum? = null
     private var logSequenceNumber = LSN.zero
 
-    fun getValue(offset: Int, type: SqlType): SqlValue =
+    fun <T : SqlValue> getValue(offset: Int, type: SqlType<T>): T =
         contents.getValue(offset, type)
 
     fun setValue(offset: Int, value: SqlValue, txnum: TxNum, lsn: LSN) {

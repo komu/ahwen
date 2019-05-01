@@ -3,12 +3,13 @@
 package dev.komu.ahwen.file
 
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
-import dev.komu.ahwen.query.SqlValue
 import dev.komu.ahwen.query.SqlInt
 import dev.komu.ahwen.query.SqlString
+import dev.komu.ahwen.query.SqlValue
 import dev.komu.ahwen.types.FileName
 import dev.komu.ahwen.types.SqlType
-import dev.komu.ahwen.types.SqlType.*
+import dev.komu.ahwen.types.SqlType.INTEGER
+import dev.komu.ahwen.types.SqlType.VARCHAR
 import java.nio.ByteBuffer
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -54,13 +55,13 @@ class Page(private val fileManager: FileManager) {
         }
     }
 
-    fun getValue(offset: Int, type: SqlType): SqlValue =
+    fun <T : SqlValue> getValue(offset: Int, type: SqlType<T>): T =
         lock.withLock {
             contents.position(offset)
-            when (type) {
+            type.cast(when (type) {
                 INTEGER -> SqlInt(contents.getInt())
                 VARCHAR -> SqlString(contents.readString())
-            }
+            })
         }
 
     companion object {
@@ -92,7 +93,7 @@ class Page(private val fileManager: FileManager) {
 }
 
 fun Page.getInt(offset: Int): Int =
-    (getValue(offset, INTEGER) as SqlInt).value
+    getValue(offset, INTEGER).value
 
 operator fun Page.set(offset: Int, value: Int) {
     this[offset] = SqlInt(value)

@@ -3,9 +3,10 @@ package dev.komu.ahwen.record
 import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.file.Page.Companion.BLOCK_SIZE
 import dev.komu.ahwen.query.SqlValue
-import dev.komu.ahwen.tx.*
+import dev.komu.ahwen.tx.Transaction
+import dev.komu.ahwen.tx.getInt
+import dev.komu.ahwen.tx.setInt
 import dev.komu.ahwen.types.ColumnName
-import dev.komu.ahwen.types.SqlType
 
 /**
  * A cursor for reading records described by [ti] from a block.

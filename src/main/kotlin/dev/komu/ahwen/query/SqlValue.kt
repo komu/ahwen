@@ -7,7 +7,7 @@ import dev.komu.ahwen.types.SqlType
  */
 sealed class SqlValue : Comparable<SqlValue> {
     abstract val value: Any
-    abstract val type: SqlType
+    abstract val type: SqlType<SqlValue>
 
     /** How many bytes are needed to store this value? */
     abstract val representationSize: Int
@@ -15,7 +15,7 @@ sealed class SqlValue : Comparable<SqlValue> {
 
 data class SqlInt(override val value: Int) : SqlValue() {
 
-    override val type: SqlType
+    override val type: SqlType<SqlInt>
         get() = SqlType.INTEGER
 
     override val representationSize: Int
@@ -29,7 +29,7 @@ data class SqlInt(override val value: Int) : SqlValue() {
 
 data class SqlString(override val value: String) : SqlValue() {
 
-    override val type: SqlType
+    override val type: SqlType<SqlString>
         get() = SqlType.VARCHAR
 
     override val representationSize: Int

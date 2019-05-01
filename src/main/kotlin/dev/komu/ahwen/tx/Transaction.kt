@@ -5,8 +5,8 @@ import dev.komu.ahwen.buffer.PageFormatter
 import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.file.FileManager
 import dev.komu.ahwen.log.LogManager
-import dev.komu.ahwen.query.SqlValue
 import dev.komu.ahwen.query.SqlInt
+import dev.komu.ahwen.query.SqlValue
 import dev.komu.ahwen.tx.concurrency.ConcurrencyManager
 import dev.komu.ahwen.tx.concurrency.LockTable
 import dev.komu.ahwen.tx.recovery.RecoveryManager
@@ -59,7 +59,7 @@ class Transaction(logManager: LogManager, bufferManager: BufferManager, lockTabl
         myBuffers.unpin(block)
     }
 
-    fun getValue(block: Block, offset: Int, type: SqlType): SqlValue {
+    fun <T : SqlValue> getValue(block: Block, offset: Int, type: SqlType<T>): T {
         concurrencyManager.sLock(block)
         val buffer = myBuffers.getBuffer(block)
         return buffer.getValue(offset, type)
@@ -96,7 +96,7 @@ class Transaction(logManager: LogManager, bufferManager: BufferManager, lockTabl
 }
 
 fun Transaction.getInt(block: Block, offset: Int): Int =
-    (getValue(block, offset, SqlType.INTEGER) as SqlInt).value
+    getValue(block, offset, SqlType.INTEGER).value
 
 fun Transaction.setInt(block: Block, offset: Int, value: Int) {
     setValue(block, offset, SqlInt(value))

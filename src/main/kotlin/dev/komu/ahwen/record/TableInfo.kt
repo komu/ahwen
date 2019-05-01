@@ -3,8 +3,6 @@ package dev.komu.ahwen.record
 import dev.komu.ahwen.tx.Transaction
 import dev.komu.ahwen.types.ColumnName
 import dev.komu.ahwen.types.FileName
-import dev.komu.ahwen.types.SqlType.INTEGER
-import dev.komu.ahwen.types.SqlType.VARCHAR
 import dev.komu.ahwen.types.TableName
 
 /**

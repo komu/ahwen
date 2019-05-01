@@ -1,16 +1,14 @@
 package dev.komu.ahwen.types
 
 import dev.komu.ahwen.file.Page.Companion.INT_SIZE
-import dev.komu.ahwen.query.SqlValue
 import dev.komu.ahwen.query.SqlInt
 import dev.komu.ahwen.query.SqlString
+import dev.komu.ahwen.query.SqlValue
 import java.sql.Types
-import java.sql.Types.VARCHAR
-import java.time.chrono.JapaneseEra.values
 
-sealed class SqlType(val code: Int) {
-    object INTEGER : SqlType(Types.INTEGER)
-    object VARCHAR : SqlType(Types.VARCHAR)
+sealed class SqlType<out T : SqlValue>(val code: Int, private val clazz: Class<T>) {
+    object INTEGER : SqlType<SqlInt>(Types.INTEGER, SqlInt::class.java)
+    object VARCHAR : SqlType<SqlString>(Types.VARCHAR, SqlString::class.java)
 
     /**
      * Returns the maximum amount of bytes to store a type of given logical length.
@@ -19,6 +17,9 @@ sealed class SqlType(val code: Int) {
         INTEGER -> INT_SIZE
         VARCHAR -> INT_SIZE + (length * MAX_BYTES_PER_CHAR) // storage format: length + data
     }
+
+    fun cast(value: SqlValue): T =
+        clazz.cast(value)
 
     val defaultValue: SqlValue
         get() = when (this) {
@@ -34,7 +35,7 @@ sealed class SqlType(val code: Int) {
 
     companion object {
 
-        operator fun invoke(code: Int): SqlType = when (code) {
+        operator fun invoke(code: Int): SqlType<*> = when (code) {
             Types.INTEGER -> INTEGER
             Types.VARCHAR -> VARCHAR
             else -> error("invalid type-code: $code")
