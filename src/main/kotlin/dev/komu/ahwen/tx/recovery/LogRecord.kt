@@ -1,6 +1,7 @@
 package dev.komu.ahwen.tx.recovery
 
 import dev.komu.ahwen.buffer.BufferManager
+import dev.komu.ahwen.buffer.withPin
 import dev.komu.ahwen.file.Block
 import dev.komu.ahwen.log.BasicLogRecord
 import dev.komu.ahwen.log.LSN
@@ -145,9 +146,9 @@ class SetIntRecord(
         logManager.append(SETINT, txNumber, block.filename, block.number, offset, oldValue)
 
     override fun undo(txnum: TxNum, bufferManager: BufferManager) {
-        val buffer = bufferManager.pin(block)
-        buffer.setValue(offset, SqlInt(oldValue), txnum, LSN.undefined)
-        bufferManager.unpin(buffer)
+        bufferManager.withPin(block) { buffer ->
+            buffer.setValue(offset, SqlInt(oldValue), txnum, LSN.undefined)
+        }
     }
 
     companion object {
@@ -178,9 +179,9 @@ class SetStringRecord(
         logManager.append(SETSTRING, txNumber, block.filename, block.number, offset, odValue)
 
     override fun undo(txnum: TxNum, bufferManager: BufferManager) {
-        val buffer = bufferManager.pin(block)
-        buffer.setValue(offset, SqlString(odValue), txnum, LSN.undefined)
-        bufferManager.unpin(buffer)
+        bufferManager.withPin(block) { buffer ->
+            buffer.setValue(offset, SqlString(odValue), txnum, LSN.undefined)
+        }
     }
 
     companion object {

@@ -100,3 +100,12 @@ class BufferManager(bufferCount: Int, fileManager: FileManager, logManager: LogM
             Duration.between(start, Instant.now()) > MAX_TIME
     }
 }
+
+inline fun <T> BufferManager.withPin(block: Block, callback: (Buffer) -> T): T {
+    val buffer = pin(block)
+    try {
+        return callback(buffer)
+    } finally {
+        unpin(buffer)
+    }
+}
