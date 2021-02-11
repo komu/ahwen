@@ -15,12 +15,12 @@ class AhwenStatement(private val db: AhwenDatabase) : Statement by unimplemented
 
     override fun executeQuery(sql: String): ResultSet = withTransaction { tx ->
         val plan = db.planner.createQueryPlan(sql, tx)
-        plan.open().use { scan ->
+        return plan.open().use { scan ->
             val rows = mutableListOf<Map<String, SqlValue>>()
             scan.forEach {
                 rows += plan.schema.columns.map { it.value to scan[it] }.toMap()
             }
-            return AhwenResultSet(rows)
+            AhwenResultSet(rows)
         }
     }
 

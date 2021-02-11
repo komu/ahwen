@@ -63,7 +63,7 @@ class HeuristicQueryPlanner(
         private fun MutableList<TablePlanner>.getLowestSelectPlan(): Plan {
             val (bestPlanner, bestPlan) = this
                 .map { it to it.makeSelectPlan() }
-                .minBy { (_, plan) -> plan.recordsOutput } ?: error("no planners")
+                .minByOrNull { (_, plan) -> plan.recordsOutput } ?: error("no planners")
 
             remove(bestPlanner)
             return bestPlan
@@ -73,7 +73,7 @@ class HeuristicQueryPlanner(
             val (bestPlanner, bestPlan) = this
                 .map { it to it.makeJoinPlan(currentPlan) }
                 .filter { (_, plan) -> plan != null }
-                .minBy { (_, plan) -> plan!!.recordsOutput }
+                .minByOrNull { (_, plan) -> plan!!.recordsOutput }
                 ?: return null
 
             remove(bestPlanner)
@@ -83,7 +83,7 @@ class HeuristicQueryPlanner(
         private fun MutableList<TablePlanner>.getLowestProductPlan(currentPlan: Plan): Plan {
             val (bestPlanner, bestPlan) = this
                 .map { it to it.makeProductPlan(currentPlan) }
-                .minBy { (_, plan) -> plan.recordsOutput }
+                .minByOrNull { (_, plan) -> plan.recordsOutput }
                 ?: error("no planners")
 
             remove(bestPlanner)
