@@ -75,7 +75,7 @@ class CheckPointRecord : LogRecord() {
 
     companion object {
 
-        fun from(@Suppress("UNUSED_PARAMETER") rec: BasicLogRecord): CheckPointRecord {
+        fun from(@Suppress("unused") rec: BasicLogRecord): CheckPointRecord {
             return CheckPointRecord()
         }
     }

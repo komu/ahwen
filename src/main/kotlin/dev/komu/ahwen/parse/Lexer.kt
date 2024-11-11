@@ -7,7 +7,7 @@ import java.io.StringReader
 class Lexer(s: String) {
 
     private val tok = StreamTokenizer(StringReader(s)).apply {
-        ordinaryChar('.'.toInt())
+        ordinaryChar('.'.code)
         lowerCaseMode(true)
         nextToken()
     }
@@ -68,7 +68,7 @@ class Lexer(s: String) {
     private fun nextToken() {
         try {
             tok.nextToken()
-        } catch (e: IOException) {
+        } catch (_: IOException) {
             throw BadSyntaxException("unexpected eof")
         }
     }

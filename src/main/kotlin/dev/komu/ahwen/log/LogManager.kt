@@ -75,7 +75,7 @@ class LogManager(
     fun append(vararg values: Any): LSN {
         val constants = values.map { convertValue(it) }
         lock.withLock {
-            val recordSize = INT_SIZE + constants.sumBy { it.representationSize }
+            val recordSize = INT_SIZE + constants.sumOf { it.representationSize }
 
             if (currentPos + recordSize >= BLOCK_SIZE) {
                 flush()

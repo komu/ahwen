@@ -38,7 +38,7 @@ class BufferManager(bufferCount: Int, fileManager: FileManager, logManager: LogM
 
                 return buffer ?: throw BufferAbortException()
 
-            } catch (e: InterruptedException) {
+            } catch (_: InterruptedException) {
                 throw BufferAbortException()
             }
         }
@@ -62,7 +62,7 @@ class BufferManager(bufferCount: Int, fileManager: FileManager, logManager: LogM
 
                 return buffer ?: throw BufferAbortException()
 
-            } catch (e: InterruptedException) {
+            } catch (_: InterruptedException) {
                 throw BufferAbortException()
             }
         }

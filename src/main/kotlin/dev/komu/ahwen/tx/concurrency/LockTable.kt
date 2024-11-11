@@ -42,7 +42,7 @@ class LockTable {
                 val value = getLockVal(block)
                 locks[block] = value + 1
 
-            } catch (e: InterruptedException) {
+            } catch (_: InterruptedException) {
                 throw LockAbortException()
             }
         }
@@ -66,7 +66,7 @@ class LockTable {
 
                 locks[block] = -1
 
-            } catch (e: InterruptedException) {
+            } catch (_: InterruptedException) {
                 throw LockAbortException()
             }
         }
