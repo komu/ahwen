@@ -44,7 +44,7 @@ class RecoveryManager(
     }
 
     /**
-     * Commit a transaction, making it's changes permanent. If the method returns without
+     * Commit a transaction, making its changes permanent. If the method returns without
      * throwing exceptions, it's guaranteed that the data will be flushed to disk and is
      * recoverable even if the system crashes at some point.
      *
