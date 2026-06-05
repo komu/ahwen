@@ -4,7 +4,7 @@ import java.lang.reflect.Proxy
 
 inline fun <reified T> unimplemented(): T =
     Proxy.newProxyInstance(T::class.java.classLoader, arrayOf(T::class.java)) { obj, method, params ->
-        if (method.declaringClass == Object::class.java) {
+        if (method.declaringClass == Any::class.java) {
             when (method.name) {
                 "equals" -> obj === params[0]
                 "hashCode" -> System.identityHashCode(obj)
