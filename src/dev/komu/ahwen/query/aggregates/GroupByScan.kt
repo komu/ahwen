@@ -64,7 +64,7 @@ class GroupByScan(
     private data class GroupValue(private val values: Map<ColumnName, SqlValue>) {
 
         constructor(scan: Scan, fields: Collection<ColumnName>) :
-            this(fields.map { it to scan[it] }.toMap())
+            this(fields.associateWith { scan[it] })
 
         operator fun get(fieldName: ColumnName): SqlValue =
             values[fieldName] ?: error("unknown field $fieldName")
